@@ -64,28 +64,29 @@ PotTempDf['year']= years
 PotTempDf['month'] = months
 PotTempDf.to_csv('PotentialTemperature.csv')
 #%%
+PotTempDf = pd.read_csv('PotentialTemperature.csv')
 import seaborn as sns
 sns.set_context('talk')
 plt.figure()
-plt.title('Potential Temperature (depth < 700m')
-plt.plot(pot_temps)
-plt.xticks(np.arange(0, len(pot_temps), 120), labels = np.arange(1950, 2024, 10))
+plt.title('Potential Temperature (depth < 700m)')
+plt.plot(PotTempDf['T'])
+plt.xticks(np.arange(0, len(PotTempDf), 120), labels = np.arange(1950, 2024, 10))
 plt.xlabel('Time')
 plt.ylabel(r'$\Theta, ^\circ C$')
-plt.savefig('PotTemp_monthly.pdf')
+plt.savefig('PotTemp_monthly.pdf', bbox_inches = 'tight')
 
 ave_PT = np.zeros(len(PotTempDf['year'].unique())-1)
 
 for year in PotTempDf['year'].unique():
     if year != 2023:
         ave_PT[int(year) - 1950] = PotTempDf[PotTempDf['year'] == year]['T'].mean()
-
+#%%
 plt.figure()
-plt.title('Potential Temperature (depth < 700m')
+plt.title('Potential Temperature (depth < 700m)')
 plt.plot(ave_PT)
 plt.xticks(np.arange(0, len(ave_PT), 10), labels = np.arange(1950, 2024, 10))
 plt.xlabel('Time')
 plt.ylabel(r'$\Theta, ^\circ C$')
-plt.savefig('PotTemp_yearlyave.pdf')
+plt.savefig('PotTemp_yearlyave.pdf', bbox_inches = 'tight')
 
 
