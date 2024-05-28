@@ -15,6 +15,8 @@ import numpy.ma as ma
 import pickle 
 import pandas as pd
 
+max_depth = np.inf
+
 datadir = 'WOCE_Data/Data/'
 method = 'BAR'
 month = '01'
@@ -40,6 +42,8 @@ for i in range(1, len(depths)):
    dz_i = (depths[i]- depth_sum)*2
    dz[i] = dz_i
    depth_sum += dz_i
+   
+depth_fracs = find_depthfracs(dz, shape, max_depth)
 
 #calculating area represented by each gridpoint
 A_ij = calc_Aij(data)
@@ -77,8 +81,8 @@ for method in ['BAR', 'PYC']:
                       extent = extent)
     plt.colorbar(plot, label = '$log_{10}$ of top to bottom APE $(Jm^{-2})$', location = 'bottom')
     plt.title(f'WOCE {method} Mean, Vertically Integrated')
-    plt.savefig(f'WOCE Plots\{method}\Log10_btt_APE_{method}.png', bbox_inches = 'tight')
-    plt.close()
+    # plt.savefig(f'WOCE Plots\{method}\Log10_btt_APE_{method}.png', bbox_inches = 'tight')
+    # plt.close()
     
     
     #vertically averaged
@@ -98,6 +102,6 @@ for method in ['BAR', 'PYC']:
                       extent = extent, vmin = 1)
     plt.colorbar(plot, label = '$log_{10}$ of vertically averaged top to bottom APE $(Jm^{-3})$', location = 'bottom')
     plt.title(f'WOCE {method} Mean, Vertically Averaged')
-    plt.savefig(f'WOCE Plots\{method}\Log10_btt_VA_APE_{method}.png', bbox_inches = 'tight')
-    plt.close()
+    # plt.savefig(f'WOCE Plots\{method}\Log10_btt_VA_APE_{method}.png', bbox_inches = 'tight')
+    # plt.close()
 

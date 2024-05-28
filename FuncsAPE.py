@@ -153,21 +153,24 @@ def find_depthfracs(dz, shape, depth_co = 700):
     '''
     
     #finding the index for the maximum depth.
-    depth_sum = 0
-    i = 0
-    while depth_sum < depth_co:
-        depth_sum += dz[i]
-        i += 1
-    i-=1
-    
-    #finding the fraction of the last depth taken 
-    dz_left = depth_co - depth_sum + dz[i]
-    frac_last = dz_left/dz[i]
-    
-    #creating the depth_frac array
-    depth_fracs = np.zeros(shape)
-    depth_fracs[:i, :, :] = 1
-    depth_fracs[i] = frac_last
+    if depth_co > np.sum(dz):
+        depth_fracs = np.ones(shape)
+    else:
+        depth_sum = 0
+        i = 0
+        while depth_sum < depth_co:
+            depth_sum += dz[i]
+            i += 1
+        i-=1
+        
+        #finding the fraction of the last depth taken 
+        dz_left = depth_co - depth_sum + dz[i]
+        frac_last = dz_left/dz[i]
+        
+        #creating the depth_frac array
+        depth_fracs = np.zeros(shape)
+        depth_fracs[:i, :, :] = 1
+        depth_fracs[i] = frac_last
     
     return depth_fracs
 
