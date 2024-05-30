@@ -101,7 +101,34 @@ for method in ['BAR', 'PYC']:
     plot = ax1.imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', 
                       extent = extent, vmin = 1)
     plt.colorbar(plot, label = '$log_{10}$ of vertically averaged top to bottom APE $(Jm^{-3})$', location = 'bottom')
+    # test = plt.contour(data.longitude, data.latitude, log_APEm2, 10) 
     plt.title(f'WOCE {method} Mean, Vertically Averaged')
     # plt.savefig(f'WOCE Plots\{method}\Log10_btt_VA_APE_{method}.png', bbox_inches = 'tight')
     # plt.close()
+#%%
+import scipy.ndimage as ndimage
+nlevs = 15
+sigma = 1
+lon = data.longitude
+lat = data.latitude
+
+
+smoothed = ndimage.gaussian_filter(log_APEm2, sigma=sigma, order=0)
+fig.tight_layout()
+axs[0].set_facecolor('darkgrey')
+axs[0].contour(lon, lat, log_APEm2, nlevs, colors = 'black')
+axs[0].set_title('Original Data')
+axs[0].imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', 
+                  extent = extent, vmin = 1)
+
+axs[1].set_facecolor('darkgrey')
+axs[1].set_title(f'Gaussian Filtered Contour, sigma = {sigma}')
+axs[1].contour(lon, lat, smoothed, nlevs, colors = 'black')
+plot = axs[1].imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', 
+                  extent = extent, vmin = 1)
+
+plt.savefig(f'WOCE Plots/log10density_with_contour_sigma{sigma}.pdf')
+
+# plt.colorbar(plot, ax = axs[2], label = '$log_{10}$ of vertically averaged top to bottom APE $(Jm^{-3})$', location = 'bottom')
+
 

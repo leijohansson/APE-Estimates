@@ -52,23 +52,35 @@ for i in APE_months_list:
     APE_sum += i
 APE_ave = APE_sum/12
 
-#plotting each mmonth
+#%%
+#plotting each month
+fig, axs = plt.subplots(3, 4, sharex = True, sharey = True, figsize = (26, 12))
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 
+          'Nov', 'Dec']
 for i in range(12):
     month = i+1
     if len(str(month)) == 1:
         month = '0'+str(month)
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
+    ax = axs[i//4, i%4]
     ax.set_facecolor('lightgrey')
     plot = ax.imshow(np.flip((APE_months_list[i] - APE_ave)*
                              surface_valid, axis = 0), vmax = 4e16, 
                      vmin = -4e16, cmap = 'seismic')
-    ax.set_title(r'$APE - \bar{APE}$'+ f' Month: {month}, {startyear}-{endyear} mean')
-    ax.set_ylabel('Latitude, $^\circ$')
-    ax.set_xlabel('Longitude, $^\circ$')
-    fig.colorbar(plot, ax= ax,label = 'Vertically Integrated APE anomaly, $Jm^{-2}$', 
-                 location = 'bottom')
-    
-    fig.savefig('EN4 Plots/VI_anomaly_{month}.png')
-    
+    ax.set_title(months[i])
+    # ax.set_ylabel('Latitude, $^\circ$')
+    # ax.set_xlabel('Longitude, $^\circ$')
+    # fig.savefig(f'EN4 Plots/VI_anomaly_{month}.png')
 
+
+fig.subplots_adjust(bottom=0.15, top = 0.97)
+plt.subplots_adjust(wspace=0.02, hspace=0.005)
+cbar_ax = fig.add_axes([0.15, 0.07, 0.7, 0.02])
+fig.colorbar(plot, cax=cbar_ax, label = 'Vertically Integrated APE anomaly, $Jm^{-2}$', 
+             location = 'bottom')
+
+
+    
+fig.suptitle(r'APE anomaly '+ f'{startyear}-{endyear} mean')
+fig.savefig(f'EN4 Plots/VI_anomaly_allmonths.pdf')
 

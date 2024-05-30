@@ -79,6 +79,11 @@ for method in ['BAR', 'PYC']:
     
     #finding anomalies from mean
     anomalies = timespace_arr - mean
+    
+    fig, axs = plt.subplots(3, 4, sharex = True, sharey = True, figsize = (26, 12))
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 
+              'Nov', 'Dec']
+    fig.tight_layout()
     for month_i in range(anomalies.shape[0]):
         mAPE = ma.masked_array(anomalies[month_i, :, :], mask = mask)
         if len(str(month_i+1)) == 1:
@@ -87,15 +92,27 @@ for method in ['BAR', 'PYC']:
         else:
             month = str(month_i+1)
         #plot and save anomalies from mean
-        fig, ax = plt.subplots()
+        # fig, ax = plt.subplots()
+        ax = axs[month_i//4, month_i%4]
         ax.set_facecolor('black')
         extent = [data.longitude[0], data.longitude[-1], data.latitude[0], data.latitude[-1]]
         plot = ax.imshow(np.flip(mAPE, axis = 0), extent = extent, cmap = 'bwr', norm=colors.CenteredNorm())#, norm=colors.SymLogNorm(linthresh = 1, vmin=-4e15, vmax=4e15, base=1e14))
-        ax.set_title(f'WOCE APE anomaly 700m {method}-{month}: {np.round(np.nansum(mAPE), -15)}J')
+        # ax.set_title(f'WOCE APE anomaly 700m {method}-{month}: {np.round(np.nansum(mAPE), -15)}J')
+        ax.set_title(f'{months[month_i]}: {np.round(np.nansum(mAPE), -15)}J')
         plt.colorbar(plot, location = 'bottom')
-        ax.set_ylabel('Latitude, $^\circ$')
-        ax.set_xlabel('Longitude, $^\circ$')
-        fig.savefig(f'WOCE Plots/{method}/Anomalies/{method}-{month}-700m_anomalies.png', 
-                    bbox_inches = 'tight')
-        plt.close()
+        # ax.set_ylabel('Latitude, $^\circ$')
+        # ax.set_xlabel('Longitude, $^\circ$')
+        
+
+
+    # fig.subplots_adjust(bottom=0.15, top = 0.97)
+    # plt.subplots_adjust(wspace=0.02, hspace=0.005)
+    # cbar_ax = fig.add_axes([0.15, 0.07, 0.7, 0.02])
+    # fig.colorbar(plot, cax=cbar_ax, label = 'Vertically Integrated APE anomaly, $Jm^{-2}$', 
+    #              location = 'bottom')
+
+    fig.suptitle(f'WOCE APE anomaly 700m: {method}')
+    fig.savefig(f'WOCE Plots/{method}/Anomalies/{method}-700m_anomalies.png', 
+                bbox_inches = 'tight')
+    plt.close()
 
