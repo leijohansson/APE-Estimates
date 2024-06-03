@@ -17,7 +17,7 @@ import matplotlib.dates as mdates
 from FuncsAPE import find_depthfracs
 
 #set max depth to take
-max_depth = 700
+max_depth = np.inf
 
 #loading filters
 with open('RegionFilters/ocean_filters-EN4.pkl', 'rb') as f:
@@ -81,5 +81,5 @@ for OB in TS_oceans.keys():
 axs[3, 0].set_xlabel('Time')
 axs[3, 1].set_xlabel('Time')
 fig.suptitle(f'Volume Integrated APE, depths < {max_depth}')
-fig.savefig('EN4 Plots/Ocean_APE-700m_TS.pdf', bbox_inches = 'tight')
+fig.savefig('EN4 Plots/Ocean_APE_TS.pdf', bbox_inches = 'tight')
         
