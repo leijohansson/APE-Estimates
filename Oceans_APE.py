@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import pickle 
 import matplotlib.dates as mdates
-from FuncsAPE import find_depthfracs
+from FuncsAPE import find_depthfracs, datapath
 
 #set max depth to take
 max_depth = np.inf
@@ -34,7 +34,7 @@ n_months = (endyear + 1 - startyear)*12
 x_time =  pd.date_range(f'{startyear}-01-01', periods=n_months, freq='m')
 
 #making array to account for maximum depth
-datadir = 'Data' 
+datadir = datapath + 'Data' 
 filename = 'EN.4.2.2.f.analysis.g10.195001.nc'
 data = xr.open_dataset(f'{datadir}/{filename}')
 depth_bnds = data.depth_bnds.to_numpy()

@@ -16,7 +16,7 @@ import scipy.io
 import numpy.ma as ma
 import pickle 
 
-max_depth = 700
+max_depth = np.inf
 
 datadir = 'WOCE_Data/Data/'
 method = 'BAR'
@@ -116,7 +116,7 @@ for method in ['BAR', 'PYC']:
 axs[3, 0].set_xlabel('Month')
 axs[3, 1].set_xlabel('Month')
 axs[0, 1].legend(loc = 'upper right', bbox_to_anchor=(1.3, 1), fontsize = 12)
-fig.suptitle(f'Volume Integrated APE, depth < {max_depth}m')
+fig.suptitle(f'Volume Integrated APE, depth < {max_depth} m')
 fig.savefig('WOCE Plots/Ocean_Climatologies.pdf', bbox_inches = 'tight')
         
         

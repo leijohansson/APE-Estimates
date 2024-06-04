@@ -17,7 +17,7 @@ import pandas as pd
 
 max_depth = np.inf
 
-datadir = 'WOCE_Data/Data/'
+datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
 month = '01'
 filename = f'WAGHC_{method}_{month}_UHAM-ICDC_v1_0_1.nc'
@@ -57,7 +57,7 @@ for i in range(len(dz)):
 for method in ['BAR', 'PYC']:
     #loading mean APE file
     filename = f'WOCE_Data/APEarrays/WAGHC_APE_{method}-mean.npy'
-    mean_APE = np.load(filename)
+    mean_APE = np.load(datapath + filename)
     
     #calculating vertical integral of mean APE (all depths)
     vert_int = np.sum(mean_APE, axis = 0)
@@ -107,13 +107,39 @@ for method in ['BAR', 'PYC']:
     # plt.close()
 #%%
 import scipy.ndimage as ndimage
-nlevs = 15
-sigma = 1
+nlevs = 20
+sigma = 3
 lon = data.longitude
 lat = data.latitude
 
 
-smoothed = ndimage.gaussian_filter(log_APEm2, sigma=sigma, order=0)
+def filter_nan_gaussian_conserving2(arr, sigma):
+    """Apply a gaussian filter to an array with nans.
+
+    Intensity is only shifted between not-nan pixels and is hence conserved.
+    The intensity redistribution with respect to each single point
+    is done by the weights of available pixels according
+    to a gaussian distribution.
+    All nans in arr, stay nans in gauss.
+    """
+    nan_msk = np.isnan(arr)
+
+    loss = np.zeros(arr.shape)
+    loss[nan_msk] = 1
+    loss = ndimage.gaussian_filter(
+            loss, sigma=sigma, mode='constant', cval=1)
+
+    gauss = arr / (1-loss)
+    gauss[nan_msk] = 0
+    gauss = ndimage.gaussian_filter(
+            gauss, sigma=sigma, mode='constant', cval=0)
+    gauss[nan_msk] = np.nan
+
+    return gauss
+
+# smoothed = ndimage.gaussian_filter(log_APEm2, sigma=sigma, order=0)
+smoothed = filter_nan_gaussian_conserving2(log_APEm2, sigma)
+fig, axs = plt.subplots(2)
 fig.tight_layout()
 axs[0].set_facecolor('darkgrey')
 axs[0].contour(lon, lat, log_APEm2, nlevs, colors = 'black')

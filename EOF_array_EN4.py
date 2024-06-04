@@ -29,7 +29,7 @@ with open('RegionFilters/ocean_filters-EN4.pkl', 'rb') as f:
 
 max_depth = np.inf
 
-datadir = 'Data' 
+datadir = datapath + 'Data' 
 filename = 'EN.4.2.2.f.analysis.g10.195001.nc'
 data = xr.open_dataset(f'{datadir}/{filename}')
 shape = data.temperature.squeeze().shape
@@ -71,7 +71,7 @@ for year in range(startyear, endyear+1):
             month = '0'+str(month)
             
         file = f'APEarrays\APE_{year}-{month}.npy'
-        APE_all = np.load(file)
+        APE_all = np.load(datapath + file)
         
         #calculating vertical integral of mean APE (all depths)
         vert_int = np.sum(APE_all, axis = 0)

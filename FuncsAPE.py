@@ -13,6 +13,8 @@ import gsw
 from gsw_gammat_analytic_CT_exact import *
 from gsw_gammat_analytic_CT import *
 
+datapath = r'C:\\Users\\Linne\\Documents\\Github\\APE Data\\'
+
 a = 4.56016575
 b = -1.24898501
 c = 0.00439778209
@@ -111,13 +113,17 @@ def calc_Aij(data):
     #Radius of the earth
     R = 6.371e6
     #finding shape of data array
-    shape = data.salinity.to_numpy().squeeze().shape
+    try:
+        shape = data.salinity.to_numpy().squeeze().shape
+    except:
+        shape = data.s_an.to_numpy().squeeze().shape
     
     #two different datasets have different names for latitude
     try:
         lat1D = data.latitude.to_numpy()
     except:
         lat1D = data.lat.to_numpy()
+
     
     #distance between grid points
     dgrid = lat1D[1] - lat1D[0]
@@ -239,5 +245,67 @@ def crop_oceanbasin(data, lon, lat):
         lon = lon[minj:maxj+1]
 
     return cdata, lon, lat
+
+
+def calc_APE_WOA(datadir, V_ijk, p, z):
+    '''
+
+    Parameters
+    ----------
+    datadir : str
+        Directory that the data is in.
+    V_ijk : 3D array of same shape as the data
+        Volume covered by each grid point.
+    p : 3D array of same shape as the data
+        Pressure at each grid point.
+    z : 3D array of same shape as the data
+        Depth of each grid point.
+
+    Returns
+    -------
+    BGE : 3D array of same shape as the data
+        Background energy at each grid point.
+    APE_dV : 3D array of same shape as the data
+        Available potential energy at each grid point
+
+    '''
+    datat = xr.open_dataset(f'{datadir}/temperature_annual_1deg.nc', decode_times = False)
+    datas= xr.open_dataset(f'{datadir}/salinity_annual_1deg.nc', decode_times = False)
+
+    SP = datas.s_an.to_numpy().squeeze()
+    PT = datat.t_an.to_numpy().squeeze()
+    
+    #calculating reference salinity from practical salinity
+    SR = gsw.conversions.SR_from_SP(SP)
+    #calculating conservative temperature from SR and 
+    #potential temperature
+    CT = gsw.conversions.CT_from_pt(SR, PT)
+    
+    #calculating zref, pref
+    gammat, zref, pref, sigref = gsw_gammat_analytic_CT_exact(SR, CT)
+    #calculating enthalpies
+    href = gsw.energy.enthalpy(SR, CT, pref)
+    h = gsw.energy.enthalpy(SR, CT, p)
+    
+    rho = gsw.density.rho(SR, CT, p)
+    
+    #background energy
+    BGE = (href-grav*zref)*rho*V_ijk
+    BGE= np.nan_to_num(BGE)
+    
+    #total energy
+    TE = (h-grav*z)*rho*V_ijk
+    TE = np.nan_to_num(TE)
+    
+    # APE density (from Tailleux 2018) = APE_dV/(rho*V_ijk) 
+    Pi2 = h - href - grav*(z-zref) 
+    
+    #APE
+    APE_dV = TE-BGE
+    APE_dV= np.nan_to_num(APE_dV)
+    APE_dV[APE_dV < 0] = 1
+
+    
+    return BGE, APE_dV
 
     

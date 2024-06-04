@@ -38,12 +38,20 @@ p = pr(z)
 #calculate vertical distance between grid points
 depths = data.depth.to_numpy()
 dz = np.zeros(len(depths))
-dz[0] = depths[1]/2
-depth_sum = dz[0]
-for i in range(1, len(depths)):
-   dz_i = (depths[i]- depth_sum)*2
-   dz[i] = dz_i
-   depth_sum += dz_i
+dz[0] = (depths[1]-depths[0])/2
+
+#layer method
+# depth_sum = dz[0]
+# for i in range(1, len(depths)):
+#     dz_i = (depths[i]- depth_sum)*2
+#     dz[i] = dz_i
+#     depth_sum += dz_i
+
+#point method
+for i in range(1, len(depths)-1):
+    dz[i] = 0.5*(depths[i+1] - depths[i-1])
+dz[-1] = 0.5*(depths[-1] - depths[-2])
+
 
 # creating 2D array of area covered by each grid point
 A_ij = calc_Aij(data)

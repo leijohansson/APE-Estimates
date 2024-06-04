@@ -15,7 +15,7 @@ import pandas as pd
 from eofs.standard import Eof
 import cartopy.crs as ccrs
 import pickle
-from FuncsAPE import crop_oceanbasin
+from FuncsAPE import crop_oceanbasin, datapath
 
 def make_EOFsolver(data, mask = None):
     mask3d = np.broadcast_to(mask, data.shape)    
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     
     neofs = 1
     
-    datadir = 'Data' 
+    datadir = datapath + 'Data' 
     filename = 'EN.4.2.2.f.analysis.g10.195001.nc'
     data = xr.open_dataset(f'{datadir}/{filename}')
     surface_s = data.salinity.values[0,0, :, :]
@@ -58,7 +58,7 @@ if __name__ == '__main__':
                 #eg '1' becomes '01' (as in the filenames)
                 month = '0'+str(month)
     
-            file = f'APEarrays\APE_{year}-{month}.npy'
+            file = f'{datapath}APEarrays\APE_{year}-{month}.npy'
             APE_all = np.load(file)
             #calculating APE up to depth 700
             APE_700 = np.sum(APE_all[:24, :, :], axis = 0)

@@ -16,7 +16,7 @@ import scipy.io
 import numpy.ma as ma
 import pickle 
 import matplotlib.colors as colors
-max_depth = 700
+max_depth = np.inf
 
 datadir = 'WOCE_Data/Data/'
 method = 'BAR'
@@ -73,7 +73,7 @@ for method in ['BAR', 'PYC']:
     plt.colorbar(plot, location = 'bottom')
     ax.set_ylabel('Latitude, $^\circ$')
     ax.set_xlabel('Longitude, $^\circ$')
-    fig.savefig(f'WOCE Plots/{method}/{method}-meanAPE-700m.png', 
+    fig.savefig(f'WOCE Plots/{method}/{method}-meanAPE-{max_depth}m.png', 
                 bbox_inches = 'tight')
     plt.close()
     
@@ -111,8 +111,8 @@ for method in ['BAR', 'PYC']:
     # fig.colorbar(plot, cax=cbar_ax, label = 'Vertically Integrated APE anomaly, $Jm^{-2}$', 
     #              location = 'bottom')
 
-    fig.suptitle(f'WOCE APE anomaly 700m: {method}')
-    fig.savefig(f'WOCE Plots/{method}/Anomalies/{method}-700m_anomalies.png', 
+    fig.suptitle(f'WOCE APE anomaly {max_depth}m: {method}')
+    fig.savefig(f'WOCE Plots/{method}/Anomalies/{method}-{max_depth}m_anomalies.png', 
                 bbox_inches = 'tight')
     plt.close()
 
