@@ -52,6 +52,6 @@ for year in [2019]:
         ax.set_ylabel('Depth, m')
         ax.set_xlabel('Latitude, $^\circ$')
         ax.invert_yaxis()
-        plt.savefig(f'EN4 Plots\zonalmean_log10APE.png', bbox_inches = 'tight')
+        plt.savefig(f'EN4 Plots\EN4_zonalmean_log10APE.png', bbox_inches = 'tight')
         # plt.close()
     

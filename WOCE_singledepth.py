@@ -16,7 +16,7 @@ import pickle
 import pandas as pd
 
 depth_list = [400, 500, 800]
-nlevs = 20
+nlevs = 15
 
 datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
@@ -61,13 +61,15 @@ A_ij3 = np.broadcast_to(A_ij, shape)
 dz3 = np.zeros(shape)
 for i in range(len(dz)):
     dz3[i, :, :] = dz[i]
+
+V_ijk = A_ij3*dz3
     
 for method in ['BAR', 'PYC']:
     #loading mean APE file
     filename = f'WOCE_Data/APEarrays/WAGHC_APE_{method}-mean.npy'
     
     #reading APE density
-    mean_APE = np.load(datapath + filename)
+    mean_APE = np.load(datapath + filename)/V_ijk
 
     #plotting multiple onto same figure
     # fig, axs = plt.subplots(len(depth_list), figsize = (12, 30))
@@ -84,13 +86,13 @@ for method in ['BAR', 'PYC']:
 
         # ax = axs[i]
         ax.set_facecolor('darkgrey')
-        plot = ax.imshow(np.flip(log_APE, axis = 0), cmap = 'coolwarm', vmin = 4.5, 
+        plot = ax.imshow(np.flip(log_APE, axis = 0), cmap = 'coolwarm', 
                       extent = extent)
         ax.contour(lon, lat, log_APE, nlevs, colors = 'black')
 
         plt.colorbar(plot, label = '$log_{10}$ APE density $(Jm^{-3})$', location = 'bottom')
         ax.set_title(f'WOCE {method} log10 APE Density, Depth: {depths[depth_i[i]]} m')
-        # plt.savefig(f'WOCE Plots\{method}\log10_depth{depth_list[i]}.png', bbox_inches = 'tight')
+        plt.savefig(f'WOCE Plots\{method}\log10_depth{depth_list[i]}.png', bbox_inches = 'tight')
     # plt.close()
     
     

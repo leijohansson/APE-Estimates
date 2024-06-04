@@ -48,6 +48,7 @@ A_ij3 = np.broadcast_to(A_ij, shape)
 dz3 = np.zeros(shape)
 for i in range(len(dz)):
     dz3[i, :, :] = dz[i]
+V_ijk = A_ij3 * dz3
     
 depth_i = np.zeros(len(depth_list), dtype = np.int8)
 a = 0
@@ -67,11 +68,11 @@ for year in [2019]:
             month = '0'+str(month)
             
         file = f'APEarrays\APE_{year}-{month}.npy'
-        APE_all = np.load(datapath + file)
+        APE_all = np.load(datapath + file)/V_ijk
         
- #plotting multiple onto same figure
- # fig, axs = plt.subplots(len(depth_list), figsize = (12, 30))
- # plt.suptitle(f'WOCE {method} Mean: Single Depth log APE Densities')
+     #plotting multiple onto same figure
+     # fig, axs = plt.subplots(len(depth_list), figsize = (12, 30))
+     # plt.suptitle(f'WOCE {method} Mean: Single Depth log APE Densities')
  
         for i in range(len(depth_list)):
             fig, ax = plt.subplots(figsize = (16, 12))
@@ -83,7 +84,7 @@ for year in [2019]:
        
             # ax = axs[i]
             ax.set_facecolor('darkgrey')
-            plot = ax.imshow(np.flip(log_APE, axis = 0), cmap = 'coolwarm', vmin = 10, 
+            plot = ax.imshow(np.flip(log_APE, axis = 0), cmap = 'coolwarm', 
                           extent = extent)
             ax.contour(data.lon, data.lat, log_APE, nlevs, colors = 'black')
        
