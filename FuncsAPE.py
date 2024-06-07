@@ -53,6 +53,8 @@ def calc_APE(datadir, filename, V_ijk, p, z):
         Background energy at each grid point.
     APE_dV : 3D array of same shape as the data
         Available potential energy at each grid point
+    Pi2: 3D array of the same shape as the data
+        APE density (J/kg) at each grid point
 
     '''
     data = xr.open_dataset(f'{datadir}/{filename}')
@@ -92,7 +94,7 @@ def calc_APE(datadir, filename, V_ijk, p, z):
     APE_dV[APE_dV < 0] = 1
 
     
-    return BGE, APE_dV
+    return BGE, APE_dV, Pi2
 
 def calc_Aij(data):
     '''
@@ -306,6 +308,6 @@ def calc_APE_WOA(datadir, V_ijk, p, z):
     APE_dV[APE_dV < 0] = 1
 
     
-    return BGE, APE_dV
+    return BGE, APE_dV, Pi2
 
     

@@ -79,12 +79,44 @@ if __name__ == '__main__':
                               extent = extent)
                 ax.contour(data.lon, data.lat, log_APE, nlevs, colors = 'black')
            
-                plt.colorbar(plot, label = '$log_{10}$ APE density $(Jm^{-3})$', location = 'bottom')
+                plt.colorbar(plot, label = '$log_{10}$ APE density $(Jm^{-3})$',
+                             location = 'bottom')
                 ax.set_title(f'EN4 {year}-{month} log10 APE Density, Depth: {depths[depth_i[i]]} m')
                 plt.savefig(f'EN4 Plots\log10_depth{depth_list[i]}.png', bbox_inches = 'tight')
             # plt.close()
         
-def EN4_singledepth_time(depth, startyear, endyear):
+def EN4_singledepth_time(depth, startyear, endyear, density = False):
+    '''
+    Function to create an 3d array of (time, lat, lon) of APE density (either
+    in J/m3 or J/kg) at the gridpoint closest to the selected depth for EN4 
+    data
+
+    Parameters
+    ----------
+    depth : float
+        depth for which APE is to be taken at (closest gridpoint).
+    startyear : int
+        start year.
+    endyear : int
+        end year.
+    density : bool, optional
+        If density is True, take APE density in J/kg. The default is False.
+
+    Returns
+    -------
+    TS_array : 3D array
+        Array of APE density (time, lat, lon).
+    time_labels : array of datetime objects
+        Corresponding date times for each time in the array.
+    lon : 1d array
+        Array of corresponding longitudes.
+    lat : 1d array
+        Array of corresponding latitudes.
+    depth_true : float
+        Depth of the grid point used  (depth of grid point closest to the 
+        inputted depth).
+
+    '''
     #reading in sample data to get dataset characteristics
     datadir = datapath + 'Data' 
     filename = 'EN.4.2.2.f.analysis.g10.195001.nc'
@@ -112,11 +144,12 @@ def EN4_singledepth_time(depth, startyear, endyear):
     mask = np.nan_to_num(volume_valid-1, nan = 1)[depth_i, :, :]
 
     
+    #creating array for data
     nmonths = (endyear+1-startyear)*12
     time_i = 0
     TS_array = np.zeros((nmonths, shape[1], shape[2]))
 
-    
+    #loop throughtime
     for year in range(startyear, endyear+1):
         for month in range(1, 13):
             if len(str(month)) == 1:
@@ -124,9 +157,14 @@ def EN4_singledepth_time(depth, startyear, endyear):
                 month = '0'+str(month)
             
             #reading in APE at depth and converting to density
-            file = f'APEarrays\APE_{year}-{month}.npy'
-            APE_density = np.load(datapath + file)[depth_i, :, :]/V #APE in Jm^-3
-            TS_array[time_i, :, :] = ma.masked_array(APE_density, mask = mask).filled(np.nan)
+            if density:
+                file = f'APEarrays\APE_density_{year}-{month}.npy'
+                APE_density = np.load(datapath + file)[depth_i, :, :] #APE in J/kg
+            else:
+                file = f'APEarrays\APE_{year}-{month}.npy'
+                APE_density = np.load(datapath + file)[depth_i, :, :]/V #APE in Jm^-3
+            TS_array[time_i, :, :] = ma.masked_array(APE_density,
+                                                     mask = mask).filled(np.nan)
             
             time_i += 1
     time_labels =  pd.date_range(f'{startyear}-01-01', 

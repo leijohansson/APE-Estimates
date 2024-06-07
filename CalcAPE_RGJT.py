@@ -16,7 +16,7 @@ import xarray as xr
 from FuncsAPE import *
 
 
-datadir = 'Data' 
+datadir = datapath + 'Data' 
 #data file has all monthly files inside (no subfolders)
 #nothing else in the data file
 
@@ -62,7 +62,7 @@ for year in range(start_year, end_year+1):
         filename = f'EN.4.2.2.f.analysis.g10.{year}{month}.nc'
         data = xr.open_dataset(f'{datadir}/{filename}')
         
-        BGE, APE_dV = calc_APE(datadir, filename, V_ijk, p, z)
+        BGE, APE_dV, APE_density = calc_APE(datadir, filename, V_ijk, p, z)
         
         
         #calculation without function: remove at some point but here just in case
@@ -109,8 +109,9 @@ for year in range(start_year, end_year+1):
         # APE_dV= np.nan_to_num(APE_dV)
         
 
-        np.save(f'BGEarrays/BGE_{year}-{month}.npy', BGE)
-        np.save(f'APEarrays/APE_{year}-{month}.npy', APE_dV)
+        np.save(f'{datapath}/BGEarrays/BGE_{year}-{month}.npy', BGE)
+        np.save(f'{datapath}/APEarrays/APE_{year}-{month}.npy', APE_dV)
+        np.save(f'{datapath}/APEarrays/APE_density_{year}-{month}.npy', APE_density)
         
         print('APE all depths:', np.sum(APE_dV))
 

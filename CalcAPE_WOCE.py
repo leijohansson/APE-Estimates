@@ -21,7 +21,7 @@ plot = False
 depth_co = 700
 
 #read data
-datadir = 'WOCE_Data/Data/'
+datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
 month = '01'
 filename = f'WAGHC_{method}_{month}_UHAM-ICDC_v1_0_1.nc'
@@ -81,7 +81,7 @@ for method in ['PYC', 'BAR']:
              month = '0'+str(month)
         filename = f'WAGHC_{method}_{month}_UHAM-ICDC_v1_0_1.nc'
         #calculate BGE, APE
-        BGE, APE_dV = calc_APE(datadir, filename, V_ijk, p, z)
+        BGE, APE_dV, APE_density = calc_APE(datadir, filename, V_ijk, p, z)
         
         #calculate vertically integrated APE up to depth of 700m
         APE_700 = np.sum(APE_dV*depth_fracs, axis = 0)
@@ -102,7 +102,9 @@ for method in ['PYC', 'BAR']:
             plt.close()
         
         #save 3D APE array
-        np.save(f'WOCE_Data/APEarrays/WAGHC_APE_{method}-{month}.npy', APE_dV)
+        np.save(f'{datapath}/WOCE_Data/APEarrays/WAGHC_APE_{method}-{month}.npy', APE_dV)
+        np.save(f'{datapath}/WOCE_Data/APEarrays/WAGHC_APE_density_{method}-{month}.npy', APE_density)
+
         #saving volume integrated depth up to 700m for each month
         APEdict[str(month)] = np.sum(APE_700)
         

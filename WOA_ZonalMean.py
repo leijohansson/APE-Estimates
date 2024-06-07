@@ -14,6 +14,7 @@ import scipy.io
 import numpy.ma as ma
 import pickle 
 import pandas as pd
+density = True
 
 datadir = datapath + 'WOA-2009'
 data = xr.open_dataset(f'{datadir}/salinity_annual_1deg.nc', decode_times = False)
@@ -25,7 +26,11 @@ vol_nans = volume_s/volume_s
 
 depths = data.depth.to_numpy()
 
-file = f'{datadir}/WOA_APE.npy'
+if density:
+    file = f'{datadir}/WOA_APE_density.npy'
+else:
+    file = f'{datadir}/WOA_APE.npy'
+    
 APE_all = np.load(file)
 APE_all = APE_all*vol_nans
 zonalmean = np.nanmean(APE_all, axis = 2)
@@ -37,10 +42,15 @@ ax.set_facecolor('darkgrey')
 X, Y = np.meshgrid(data.lat, data.depth)
 plot = ax.contourf(X, Y, log10zm, levels = 15)
 # plt.gca().flip
-plt.colorbar(plot, label = '$log_{10}$ zonal mean APE density $(Jm^{-3})$', location = 'bottom')
+
+if density:
+    plt.colorbar(plot, label = '$log_{10}$ zonal mean APE density $(Jkg^{-1})$', location = 'bottom')
+else:
+    plt.colorbar(plot, label = '$log_{10}$ zonal mean APE density $(Jm^{-3})$', location = 'bottom')
+
 ax.set_title(f'WOA 2009 Zonal Mean')
 ax.set_ylabel('Depth, m')
 ax.set_xlabel('Latitude, $^\circ$')
 ax.invert_yaxis()
-plt.savefig(f'WOA Plots\WOA_zonalmean_log10APE.png', bbox_inches = 'tight')
+# plt.savefig(f'WOA Plots\WOA_zonalmean_log10APE.png', bbox_inches = 'tight')
 # plt.close()

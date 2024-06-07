@@ -66,7 +66,7 @@ depth_fracs = find_depthfracs(dz, shape)
 
 #for each data type
 #calculate BGE, APE
-BGE, APE_dV = calc_APE_WOA(datadir, V_ijk, p, z)
+BGE, APE_dV, APE_density = calc_APE_WOA(datadir, V_ijk, p, z)
 
 #calculate vertically integrated APE up to depth of 700m
 APE_700 = np.sum(APE_dV*depth_fracs, axis = 0)
@@ -88,6 +88,8 @@ if plot:
 
 #save 3D APE array
 np.save(f'{datadir}/WOA_APE.npy', APE_dV)
+np.save(f'{datadir}/WOA_APE_density.npy', APE_dV)
+
 #saving volume integrated depth up to 700m for each month
                 
 
