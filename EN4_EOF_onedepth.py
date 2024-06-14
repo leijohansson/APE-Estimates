@@ -13,6 +13,7 @@ import pandas as pd
 import pickle
 from FuncsAPE import crop_oceanbasin, datapath
 from EN4_singledepth import EN4_singledepth_time
+import os
 
 from EOF import make_EOFsolver
 #whether to use log10 of density at depth
@@ -24,10 +25,14 @@ startyear = 1960
 endyear = 2020
 
 #setting depth to choose
-depth = 800
+depth = 400
 
 #setting number of eofs to plot
 neofs = 4
+
+plotdir = f'EN4 Plots/EOF_{depth}m'
+if f'EOF_{depth}m' not in os.listdir(path = 'EN4 Plots/'):
+    os.mkdir(f'EN4 Plots/EOF_{depth}m')
 
 #reading in and taking data only at a single depth
 APE, time, lon, lat, true_depth = EN4_singledepth_time(depth, startyear, endyear, density)
@@ -87,9 +92,10 @@ for OB in ocean_filters.keys():
     fracs = solver.varianceFraction(neofs)
     for e in range(neofs):
         basin, lonb, latb = crop_oceanbasin(eof1[e, :, :], lon, lat)
+        axs[e//2, e%2].set_facecolor('darkgrey')
         
-        plot = axs[e//2, e%2].imshow(basin, #levels=clevs,
-                    cmap=plt.cm.RdBu_r)
+        plot = axs[e//2, e%2].imshow(np.flip(basin, axis = 0), #levels=clevs,
+                    cmap=plt.cm.RdBu_r, extent = [lonb[0], lonb[-1], latb[0], latb[-1]])
         fig.colorbar(plot, ax = axs[e//2, e%2], shrink=0.8, location = 'bottom')        
         axs1[e//2, e%2].plot(time, pc1[:, e])
         
@@ -101,15 +107,16 @@ for OB in ocean_filters.keys():
     fig1.tight_layout()
     OB = OB.replace(" ", "") #removing space for filename purposes
     
+
     if log:
-        fig.savefig(f'EN4 Plots/EOF_log_onedepth_{OB}_{true_depth}_spatial.pdf', bbox_inches = 'tight')
-        fig.savefig(f'EN4 Plots/EOF_log_onedepth_{OB}_{true_depth}_PC1.pdf', bbox_inches = 'tight')
+        fig.savefig(f'{plotdir}/EOF_log_onedepth_{OB}_{true_depth}_spatial.pdf', bbox_inches = 'tight')
+        fig.savefig(f'{plotdir}/EOF_log_onedepth_{OB}_{true_depth}_PC.pdf', bbox_inches = 'tight')
     else: 
-        fig.savefig(f'EN4 Plots/EOF_onedepth_{true_depth}_spatial.pdf', bbox_inches = 'tight')
-        fig.savefig(f'EN4 Plots/EOF_onedepth_{true_depth}_PC1.pdf', bbox_inches = 'tight')
-        
-
-
+        fig.savefig(f'{plotdir}/EOF_onedepth__{OB}_{true_depth}_spatial.pdf', bbox_inches = 'tight')
+        fig.savefig(f'{plotdir}/EOF_onedepth_{OB}_{true_depth}_PC.pdf', bbox_inches = 'tight')
+    fig.close()
+    fig1.close()
+    
     # except:
         # print(f'{OB} didnt work. investigate me pls')
 

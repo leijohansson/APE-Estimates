@@ -19,10 +19,6 @@ from FuncsAPE import crop_oceanbasin, datapath
 
 def make_EOFsolver(data, mask = None):
     mask3d = np.broadcast_to(mask, data.shape)    
-    #computing anomalies by subtracting time mean
-    # timemean = np.mean(data, axis = 0)
-    # anomalies = data - timemean
-    # anomalies = data
     m_data= ma.masked_array(data, mask = mask3d)
     solver = Eof(m_data) #, weights=wgts)
     return solver
