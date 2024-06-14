@@ -11,6 +11,7 @@ import numpy as np
 import xarray as xr
 import gsw
 from gsw_gammat_analytic_CT_exact import *
+from gsw_gammat_analytic_CT_fast import *
 from gsw_gammat_analytic_CT import *
 
 datapath = r'C:\\Users\\Linne\\Documents\\Github\\APE Data\\'
@@ -30,7 +31,7 @@ rhor = lambda z: a/(b+1)*(z+e)**(b+1) + c*z + d   ## This analytical density pro
 pr = lambda z: grav * (a/((b+1)*(b+2))*((z+e)**(b+2)) + c/2.*z**2 + d*z 
                        - a/((b+1)*(b+2))*e**(b+2))/1e4
 
-def calc_APE(datadir, filename, V_ijk, p, z):
+def calc_APE(datadir, filename, V_ijk, p, z, routine = 'exact', nonegs = True):
     '''
     
 
@@ -46,6 +47,10 @@ def calc_APE(datadir, filename, V_ijk, p, z):
         Pressure at each grid point.
     z : 3D array of same shape as the data
         Depth of each grid point.
+    routine: string
+        type of routine to use to calculate the reference values
+        'fast' or 'exact'
+        The default is 'exact'
 
     Returns
     -------
@@ -57,6 +62,7 @@ def calc_APE(datadir, filename, V_ijk, p, z):
         APE density (J/kg) at each grid point
 
     '''
+    # start = time.time()
     data = xr.open_dataset(f'{datadir}/{filename}')
     SP = data.salinity.to_numpy().squeeze()
     PT = data.temperature.to_numpy().squeeze()
@@ -67,10 +73,15 @@ def calc_APE(datadir, filename, V_ijk, p, z):
     SR = gsw.conversions.SR_from_SP(SP)
     #calculating conservative temperature from SR and 
     #potential temperature
-    CT = gsw.conversions.CT_from_pt(SR, PT)
+    # CT = gsw.conversions.CT_from_pt(SR, PT)
+    CT = gsw.conversions.CT_from_pt(SP, PT)
     
     #calculating zref, pref
-    gammat, zref, pref, sigref = gsw_gammat_analytic_CT_exact(SR, CT)
+    if routine == 'exact':
+        gammat, zref, pref, sigref = gsw_gammat_analytic_CT_exact(SR, CT)
+    elif routine == 'fast':
+        gammat, zref, pref, sigref = gsw_gammat_analytic_CT_fast(SR, CT)
+
     #calculating enthalpies
     href = gsw.energy.enthalpy(SR, CT, pref)
     h = gsw.energy.enthalpy(SR, CT, p)
@@ -91,8 +102,9 @@ def calc_APE(datadir, filename, V_ijk, p, z):
     #APE
     APE_dV = TE-BGE
     APE_dV= np.nan_to_num(APE_dV)
-    APE_dV[APE_dV < 0] = 1
-
+    if nonegs:
+        APE_dV[APE_dV < 0] = 1
+    # print(time.time()-start)
     
     return BGE, APE_dV, Pi2
 
