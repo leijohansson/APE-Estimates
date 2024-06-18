@@ -15,27 +15,26 @@ import numpy as np
 import pickle 
 import matplotlib.dates as mdates
 from FuncsAPE import find_depthfracs, datapath
-
+# from polygons_EN4 import oceans
 #set max depth to take
 max_depth = np.inf
 
 #loading filters
 with open('RegionFilters/ocean_filters-EN4.pkl', 'rb') as f:
     ocean_filters = pickle.load(f)
-
 dictkey = list(ocean_filters.keys())[0]
 ocean_filters['World'] = np.ones(ocean_filters[dictkey].shape)
 
 #set time range
 startyear = 1960
-endyear = 1980
+endyear = 2020    
 
 n_months = (endyear + 1 - startyear)*12
 x_time =  pd.date_range(f'{startyear}-01-01', periods=n_months, freq='m')
 
 #making array to account for maximum depth
-datadir = datapath + 'Data' 
-filename = 'EN.4.2.2.f.analysis.g10.195001.nc'
+datadir = datapath
+filename = 'Data/EN.4.2.2.f.analysis.g10.195001.nc'
 data = xr.open_dataset(f'{datadir}/{filename}')
 depth_bnds = data.depth_bnds.to_numpy()
 dz = depth_bnds[:, 1] - depth_bnds[:, 0]
@@ -58,8 +57,8 @@ for year in range(startyear, endyear+1):
             #eg '1' becomes '01' (as in the filenames)
             month = '0'+str(month)
             
-        file = f'APEarrays\APE_{year}-{month}.npy'
-        APE_all = np.load(file)
+        file = f'\APEarrays\APE_{year}-{month}.npy'
+        APE_all = np.load(datadir + file)
         #calculating APE up to depth 700
         APE_700 = np.sum(APE_all*depth_fracs, axis = 0)
         
@@ -69,17 +68,18 @@ for year in range(startyear, endyear+1):
         
 
 #Plots
-fig, axs = plt.subplots(4, 2, figsize=(12, 15))
+fig, axs = plt.subplots(4, 3, figsize=(12, 15))
 f_i = 0
 for OB in TS_oceans.keys():
-    axs[f_i//2, f_i%2].plot(x_time, TS_oceans[OB])
-    axs[f_i//2, f_i%2].set_title(OB)
-    axs[f_i//2, f_i%2].set_ylabel('Volume Integrated APE, $Jm^{-3}$')
+    axs[f_i//3, f_i%3].plot(x_time, TS_oceans[OB])
+    axs[f_i//3, f_i%3].set_title(OB)
+    axs[f_i//3, f_i%3].set_ylabel('Volume Integrated APE, $Jm^{-3}$')
     f_i += 1
     
 
 axs[3, 0].set_xlabel('Time')
 axs[3, 1].set_xlabel('Time')
 fig.suptitle(f'Volume Integrated APE, depths < {max_depth}')
+fig.tight_layout()
 fig.savefig('EN4 Plots/Ocean_APE_TS.pdf', bbox_inches = 'tight')
         

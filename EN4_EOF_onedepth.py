@@ -14,8 +14,27 @@ import pickle
 from FuncsAPE import crop_oceanbasin, datapath
 from EN4_singledepth import EN4_singledepth_time
 import os
+from matplotlib.colors import TwoSlopeNorm
+import cartopy.crs as ccrs
 
 from EOF import make_EOFsolver
+
+import matplotlib.path as mpath
+
+#from https://nordicesmhub.github.io/NEGI-Abisko-2019/training/example_NorthPolarStereo_projection.html
+def polarCentral_set_latlim(lat_lims, ax):
+    ax.set_extent([-180, 180, lat_lims[0], lat_lims[1]], ccrs.PlateCarree())
+    # Compute a circle in axes coordinates, which we can use as a boundary
+    # for the map. We can pan/zoom as much as we like - the boundary will be
+    # permanently circular.
+    theta = np.linspace(0, 2*np.pi, 100)
+    center, radius = [0.5, 0.5], 0.5
+    verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+    circle = mpath.Path(verts * radius + center)
+
+    ax.set_boundary(circle, transform=ax.transAxes)
+
+
 #whether to use log10 of density at depth
 log = False
 #if density == True, take APE in J/kg, else take in J/m3
@@ -67,13 +86,19 @@ for OB in ocean_filters.keys():
     mask_ocean = (masksum>0)
     
     #setting up figures
-    if OB in ['Arctic Ocean', 'Southern Ocean']:
-        fig, axs = plt.subplots(neofs//2, 2, figsize=(18, 4))
+    if OB == 'Arctic Ocean':
+        fig, axs = plt.subplots(neofs//2, 2, figsize=(10, 10),
+                                subplot_kw={'projection': ccrs.NorthPolarStereo()})
+    elif OB == 'Southern Ocean':
+        fig, axs = plt.subplots(neofs//2, 2, figsize=(10, 10),
+                                subplot_kw={'projection': ccrs.SouthPolarStereo()})
     else:
         fig, axs = plt.subplots(neofs//2, 2, figsize=(12, 12))
+        
 
     fig1, axs1 = plt.subplots(neofs//2, 2, figsize=(12, 15))
 
+    
     
     if log:
         fig.suptitle(f'{OB}, EOF as Covariance: log10 APE density at {true_depth}m')
@@ -81,8 +106,8 @@ for OB in ocean_filters.keys():
     else:
         fig.suptitle(f'{OB}, EOF as Covariance: APE density at {true_depth}m')
         fig1.suptitle(f'{OB}, EOF PC1: APE density at {true_depth}m')
+
         
-    # try:
     if log:
         solver = make_EOFsolver(log10, mask_ocean)
     else:
@@ -92,10 +117,30 @@ for OB in ocean_filters.keys():
     fracs = solver.varianceFraction(neofs)
     for e in range(neofs):
         basin, lonb, latb = crop_oceanbasin(eof1[e, :, :], lon, lat)
+        extent = [lonb[0], lonb[-1], latb[0], latb[-1]]
         axs[e//2, e%2].set_facecolor('darkgrey')
+        maxval = max(np.abs(np.nanmin(basin)), np.nanmax(basin))
+        norm = TwoSlopeNorm(vcenter=0, vmin = -maxval, vmax = maxval)
+        if OB in ['Arctic Ocean', 'Southern Ocean']:
+            # axs[e//2, e%2].set_extent(extent, crs=ccrs.NorthPolarStereo())
+            plot = axs[e//2, e%2].contourf(lonb, latb, basin, #levels=clevs,
+                        cmap=plt.cm.RdBu_r, norm = norm, transform = ccrs.PlateCarree())
+            gl = axs[e//2, e%2].gridlines(draw_labels=False, xlocs=None, ylocs=None, color = 'black', alpha = 0.3)
+            gl.n_steps = 90
+            lat_lims = [latb[0], latb[-1]]
+            polarCentral_set_latlim(lat_lims, axs[e//2, e%2])
+        # elif OB == 'Southern Ocean':
+            # axs[e//2, e%2].set_extent(extent, crs=ccrs.PlateCarree())
+            # plot = axs[e//2, e%2].contourf(lonb, latb, basin, #levels=clevs,
+                        # cmap=plt.cm.RdBu_r, norm = norm, transform = ccrs.PlateCarree())
+        else:
+            # plot = axs[e//2, e%2].imshow(np.flip(basin, axis = 0), #levels=clevs,
+            #         cmap=plt.cm.RdBu_r, norm = norm, 
+            #         extent = [lonb[0], lonb[-1], latb[0], latb[-1]])
         
-        plot = axs[e//2, e%2].imshow(np.flip(basin, axis = 0), #levels=clevs,
-                    cmap=plt.cm.RdBu_r, extent = [lonb[0], lonb[-1], latb[0], latb[-1]])
+            plot = axs[e//2, e%2].contourf(lonb, latb, basin, #levels=clevs,
+                        cmap=plt.cm.RdBu_r, norm = norm)
+
         fig.colorbar(plot, ax = axs[e//2, e%2], shrink=0.8, location = 'bottom')        
         axs1[e//2, e%2].plot(time, pc1[:, e])
         
@@ -107,15 +152,14 @@ for OB in ocean_filters.keys():
     fig1.tight_layout()
     OB = OB.replace(" ", "") #removing space for filename purposes
     
-
     if log:
         fig.savefig(f'{plotdir}/EOF_log_onedepth_{OB}_{true_depth}_spatial.pdf', bbox_inches = 'tight')
-        fig.savefig(f'{plotdir}/EOF_log_onedepth_{OB}_{true_depth}_PC.pdf', bbox_inches = 'tight')
+        fig1.savefig(f'{plotdir}/EOF_log_onedepth_{OB}_{true_depth}_PC.pdf', bbox_inches = 'tight')
     else: 
         fig.savefig(f'{plotdir}/EOF_onedepth__{OB}_{true_depth}_spatial.pdf', bbox_inches = 'tight')
-        fig.savefig(f'{plotdir}/EOF_onedepth_{OB}_{true_depth}_PC.pdf', bbox_inches = 'tight')
-    fig.close()
-    fig1.close()
+        fig1.savefig(f'{plotdir}/EOF_onedepth_{OB}_{true_depth}_PC.pdf', bbox_inches = 'tight')
+    plt.close(fig)
+    plt.close(fig1)
     
     # except:
         # print(f'{OB} didnt work. investigate me pls')
