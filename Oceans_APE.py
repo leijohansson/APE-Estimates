@@ -65,13 +65,24 @@ for year in range(startyear, endyear+1):
         for OB in ocean_filters:
             APE_ocean = np.nansum(APE_700 * ocean_filters[OB])
             TS_oceans[OB][time_id] = APE_ocean
-        
+#%%
+#number of months to take mean over
+rolling_n = 12
+#creating dataframe
+df = pd.DataFrame()
+for OB in ocean_filters.keys():
+    df[OB] = TS_oceans[OB]
+rolling = df.rolling(rolling_n)
 
+#%%
 #Plots
 fig, axs = plt.subplots(4, 3, figsize=(12, 15))
 f_i = 0
 for OB in TS_oceans.keys():
-    axs[f_i//3, f_i%3].plot(x_time, TS_oceans[OB])
+    #plotting data
+    axs[f_i//3, f_i%3].plot(x_time, TS_oceans[OB], alpha = 0.6)
+    #plotting rolling mean
+    axs[f_i//3, f_i%3].plot(x_time, rolling.mean()[OB], color = 'black')
     axs[f_i//3, f_i%3].set_title(OB)
     axs[f_i//3, f_i%3].set_ylabel('Volume Integrated APE, $Jm^{-3}$')
     f_i += 1
@@ -81,5 +92,5 @@ axs[3, 0].set_xlabel('Time')
 axs[3, 1].set_xlabel('Time')
 fig.suptitle(f'Volume Integrated APE, depths < {max_depth}')
 fig.tight_layout()
-fig.savefig('EN4 Plots/Ocean_APE_TS.pdf', bbox_inches = 'tight')
+# fig.savefig('EN4 Plots/Ocean_APE_TS.pdf', bbox_inches = 'tight')
         
