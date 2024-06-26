@@ -260,6 +260,30 @@ def crop_oceanbasin(data, lon, lat):
 
     return cdata, lon, lat
 
+def rearrange_OB(data, lon, lat):
+    print(data.shape)
+    data = data.filled(np.nan)
+    #find all columns with data
+    cols = np.nansum(data, axis = 0)
+    #indexes of columns with data
+    cols_i = np.where(cols!=0)[0]
+
+    if cols[0]!=0 and cols[-1]!=0 and 0 in cols:
+        zero_i = np.where(cols == 0)[0]
+        
+        #if not all indices with 0 are consescutive
+        if True in ((zero_i[1:]-zero_i[:-1])>1):
+            print('Not all 0 between sections')
+        right = data[:, zero_i[0]:]
+        left = data[:, :zero_i[0]]
+        data = np.concatenate((right, left), axis = 1)
+        lon = np.concatenate((lon[zero_i[0]:], lon[:zero_i[0]]))
+        # lat = np.concatenate((lon[:, zero_i[0]:], lon[:, :zero_i[0]]), axis = 1)
+
+        print(data.shape)
+    return data, lon, lat
+
+
 
 def calc_APE_WOA(datadir, V_ijk, p, z):
     '''

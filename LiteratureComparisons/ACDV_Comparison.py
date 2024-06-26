@@ -75,15 +75,24 @@ for method in ['BAR', 'PYC']:
     
     #plotting vertically integrated APE per unit area
     fig, ax = plt.subplots()
+    
     ax.set_facecolor('darkgrey')
+    vmin = 4.5
+    vmax = 7
+    log_cont = log_APEm2.copy()
+    log_cont[np.where(log_cont < vmin)] = vmin
+    log_cont[np.where(log_cont > vmax)] = vmax
+
     extent = [data.longitude[0], data.longitude[-1], data.latitude[0], data.latitude[-1]]
-    plot = ax.imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', vmin = 4.5, 
-                      extent = extent)
+    # plot = ax.imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', vmin = 4.5, 
+                       # extent = extent)
+    plot = ax.contourf(data.longitude, data.latitude, log_cont, cmap = 'coolwarm')
     plt.colorbar(plot, label = '$log_{10}$ of top to bottom APE $(Jm^{-2})$', location = 'bottom')
-    plt.title(f'WOCE {method} Mean, Vertically Integrated')
+    ax.set_title(f'WOCE {method} Mean, Vertically Integrated')
+    ax.set_ylim(-70, 70)
     # plt.savefig(f'WOCE Plots\{method}\Log10_btt_APE_{method}.png', bbox_inches = 'tight')
     # plt.close()
-    
+    #%%
     
     #vertically averaged
     zsum = np.sum(dz3*volume_valid, axis = 0)
@@ -100,7 +109,7 @@ for method in ['BAR', 'PYC']:
     ax1.set_facecolor('darkgrey')
     plot = ax1.imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', 
                       extent = extent, vmin = 1)
-    plt.colorbar(plot, label = '$log_{10}$ of vertically averaged top to bottom APE $(Jm^{-3})$', location = 'bottom')
+    plt.colorbar(plot, label = '$log_{10}$ of vertically averaged top to bottom APE $(Jm^{-3})$')#, location = 'bottom')
     # test = plt.contour(data.longitude, data.latitude, log_APEm2, 10) 
     plt.title(f'WOCE {method} Mean, Vertically Averaged')
     # plt.savefig(f'WOCE Plots\{method}\Log10_btt_VA_APE_{method}.png', bbox_inches = 'tight')

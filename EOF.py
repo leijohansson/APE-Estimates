@@ -22,6 +22,7 @@ def make_EOFsolver(data, mask = None):
     m_data= ma.masked_array(data, mask = mask3d)
     solver = Eof(m_data) #, weights=wgts)
     return solver
+
 if __name__ == '__main__':
     with open('RegionFilters/ocean_filters-EN4.pkl', 'rb') as f:
         ocean_filters = pickle.load(f)

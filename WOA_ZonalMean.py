@@ -40,7 +40,7 @@ flipped = np.flip(log10zm, axis =0)
 fig, ax = plt.subplots(figsize = (20, 15))
 ax.set_facecolor('darkgrey')
 X, Y = np.meshgrid(data.lat, data.depth)
-plot = ax.contourf(X, Y, log10zm, levels = 15)
+plot = ax.contourf(X, Y, log10zm, levels = 15, cmap = 'viridis')
 # plt.gca().flip
 
 if density:

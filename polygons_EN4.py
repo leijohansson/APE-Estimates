@@ -41,6 +41,8 @@ if __name__ == '__main__':
     #getting lon and lat
     lat = data.lat.to_numpy()
     lon = data.lon.to_numpy()
+    
+    extent = [lon[0], lon[-1], lat[0], lat[-1]]
     #converting lon to same range (-180 to 180)
     oor_lon = np.where(lon > 180)[0]
     lon[oor_lon] = lon[oor_lon] - 360
@@ -73,6 +75,8 @@ if __name__ == '__main__':
     colors = ['Reds_r', 'Oranges_r', 'plasma_r', 'Greens_r', 'Blues_r', 'Purples_r', 'Greys_r', 'summer', 'spring', 'autumn'] 
     c = 0 #color index for plotting
     ocean_dict = {}
+    plotting = np.zeros(shape_2d)
+    plt.figure()
     for name in oceans:
         LonLatBool = np.zeros(shape_2d)
         # ocean_points = pointInPolys[pointInPolys.NAME == name]
@@ -85,35 +89,27 @@ if __name__ == '__main__':
             LonLatBool[np.where(LAT<-45)] = 1
         else:
             LonLatBool[np.where(LAT<-45)] = 0
+        if name == 'Indian Ocean':
+            print(colors[c])
+            sum_bool = (LAT >= 13).astype(int) + (LON < 44).astype(int)
+            LonLatBool[np.where(sum_bool >1)] = 0
+       
+        plotting += LonLatBool*(c+1)
         LonLatBool[LonLatBool == 0] = np.nan
         for j in range(len(lat)):
             if (LonLatBool[j, 179+1] == 1) and (LonLatBool[j, 179-1]==1):
                 LonLatBool[j, 179] = 1
+            if (LonLatBool[j, 0] == 1) and (LonLatBool[j, -2]==1):
+                LonLatBool[j, -1] = 1
         ocean_dict[name] = LonLatBool.copy()
         
         # plotting to check that its correct
-        plt.imshow(LonLatBool, cmap = colors[c])
+        plt.imshow(np.flip(LonLatBool,  axis = 0), cmap = colors[c],
+                    extent = extent)
         
         c += 1 #updating color index for plotting
     #saving filters as a dictionary
     with open('RegionFilters/ocean_filters-EN4.pkl', 'wb') as f:
         pickle.dump(ocean_dict, f)
-    
-    # #repeating above but for mediterranean and red sea
-    # seas = ['Mediterranean Sea - Eastern Basin', 'Mediterranean Sea - Western Basin', 'Red Sea']
-    # seas_df = worldseas[worldseas['NAME'].isin(seas)]
-    # pointInPolys_sea= gpd.tools.sjoin(points, seas_df, predicate="within", how='left')
-    
-    # seas_dict = {}
-    # for name in seas:
-    #     LonLatBool = np.zeros(shape_2d)
-    #     sea_points = pointInPolys[pointInPolys_sea.NAME == name]
-    #     for pt in sea_points.index:
-    #         i = sea_points.lon_i
-    #         j = sea_points.lat_j
-    #         LonLatBool[j, i] = 1
-    #         LonLatBool[LonLatBool == 0] = np.nan
-    #     seas_dict[name] = LonLatBool.copy()
-    
-    # with open('RegionFilters/sea_filters-EN4.pkl', 'wb') as f:
-    #     pickle.dump(seas_dict, f)
+    # plt.contour(lon, lat, plotting)
+# 

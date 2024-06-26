@@ -22,8 +22,8 @@ datadir = datapath + 'Data'
 
 filename = 'EN.4.2.2.f.analysis.g10.195001.nc'
 data = xr.open_dataset(f'{datadir}/{filename}')
-start_year = 1960
-end_year = 2022
+start_year = 2023
+end_year = 2023
 
 shape = data.salinity.squeeze().shape
 #converting lat, z into same shape as data
@@ -48,7 +48,6 @@ for i in range(len(depth_bnds)):
 # RGJT: Pressure needs to be defined in terms of Lorenz reference pressure pr(z) for local APE density
 # to be positive definite 
 p = pr(z) 
-
 #restricting depths to max depth
 dz = depth_bnds[:, 1] - depth_bnds[:, 0]
 
