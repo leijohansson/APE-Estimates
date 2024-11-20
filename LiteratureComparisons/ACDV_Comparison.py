@@ -14,8 +14,13 @@ import scipy.io
 import numpy.ma as ma
 import pickle 
 import pandas as pd
+import cartopy.crs as ccrs
+import seaborn as sns
+sns.set_context('paper')
 
-max_depth = np.inf
+# max_depth = np.inf
+max_depth = 2500
+
 
 datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
@@ -60,7 +65,7 @@ for method in ['BAR', 'PYC']:
     mean_APE = np.load(datapath + filename)
     
     #calculating vertical integral of mean APE (all depths)
-    vert_int = np.sum(mean_APE, axis = 0)
+    vert_int = np.sum(mean_APE*depth_fracs, axis = 0)
     
     #masking non ocean areas
     VIm = ma.masked_array(vert_int, mask = mask)
@@ -74,28 +79,29 @@ for method in ['BAR', 'PYC']:
     log_APEm2[negative] = 0
     
     #plotting vertically integrated APE per unit area
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()},
+                           figsize = (8, 6))
+    ax.coastlines()
+    # ax.set_facecolor('black')
     
-    ax.set_facecolor('darkgrey')
     vmin = 4.5
-    vmax = 7
+    # vmax = 7
     log_cont = log_APEm2.copy()
     log_cont[np.where(log_cont < vmin)] = vmin
-    log_cont[np.where(log_cont > vmax)] = vmax
+    # log_cont[np.where(log_cont > vmax)] = vmax
 
     extent = [data.longitude[0], data.longitude[-1], data.latitude[0], data.latitude[-1]]
     # plot = ax.imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', vmin = 4.5, 
                        # extent = extent)
-    plot = ax.contourf(data.longitude, data.latitude, log_cont, cmap = 'coolwarm')
-    plt.colorbar(plot, label = '$log_{10}$ of top to bottom APE $(Jm^{-2})$', location = 'bottom')
-    ax.set_title(f'WOCE {method} Mean, Vertically Integrated')
-    ax.set_ylim(-70, 70)
-    # plt.savefig(f'WOCE Plots\{method}\Log10_btt_APE_{method}.png', bbox_inches = 'tight')
+    plot = ax.imshow(np.flip(log_cont, axis = 0), extent = extent, cmap = 'jet')
+    plt.colorbar(plot, label = '$log_{10}($ APE $[Jm^{-2}])$', location = 'bottom', pad = 0.05)
+    # ax.set_title(f'WOCE {method} Mean, Vertically Integrated')
+    plt.savefig(f'WOCE Plots\{method}\Log10_btt_APE_{method}{max_depth}.pdf', bbox_inches = 'tight')
     # plt.close()
-    #%%
+    
     
     #vertically averaged
-    zsum = np.sum(dz3*volume_valid, axis = 0)
+    zsum = np.sum(dz3*volume_valid*depth_fracs, axis = 0)
     VA_per_area = VI_per_area / zsum
     
     #finding log
@@ -105,14 +111,17 @@ for method in ['BAR', 'PYC']:
     log_APEm2[negative] = 0
     
     #plotting vertically averaged APE density
-    fig1, ax1 = plt.subplots()
-    ax1.set_facecolor('darkgrey')
-    plot = ax1.imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', 
+    fig1, ax1 = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()},
+                             figsize = (8, 6))
+    ax1.coastlines()
+    # ax1.set_facecolor('black')
+
+    plot = ax1.imshow(np.flip(log_APEm2, axis = 0), cmap = 'jet', 
                       extent = extent, vmin = 1)
-    plt.colorbar(plot, label = '$log_{10}$ of vertically averaged top to bottom APE $(Jm^{-3})$')#, location = 'bottom')
+    plt.colorbar(plot, label = '$log_{10}($ mean APE $[Jm^{-3}])$', location = 'bottom', pad = 0.05)
     # test = plt.contour(data.longitude, data.latitude, log_APEm2, 10) 
-    plt.title(f'WOCE {method} Mean, Vertically Averaged')
-    # plt.savefig(f'WOCE Plots\{method}\Log10_btt_VA_APE_{method}.png', bbox_inches = 'tight')
+    # plt.title(f'WOCE {method} Mean, Vertically Averaged')
+    plt.savefig(f'WOCE Plots\{method}\Log10_btt_VA_APE_{method}{max_depth}.pdf', bbox_inches = 'tight')
     # plt.close()
 #%%
 import scipy.ndimage as ndimage
@@ -162,7 +171,7 @@ axs[1].contour(lon, lat, smoothed, nlevs, colors = 'black')
 plot = axs[1].imshow(np.flip(log_APEm2, axis = 0), cmap = 'coolwarm', 
                   extent = extent, vmin = 1)
 
-plt.savefig(f'WOCE Plots/log10density_with_contour_sigma{sigma}.pdf')
+# plt.savefig(f'WOCE Plots/log10density_with_contour_sigma{sigma}.pdf')
 
 # plt.colorbar(plot, ax = axs[2], label = '$log_{10}$ of vertically averaged top to bottom APE $(Jm^{-3})$', location = 'bottom')
 

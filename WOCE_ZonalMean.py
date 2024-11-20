@@ -16,6 +16,7 @@ import pickle
 import pandas as pd
 
 max_depth = np.inf
+vmin = 1 #minimum log10 value
 
 datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
@@ -44,28 +45,33 @@ for i in range(1, len(depths)):
    dz[i] = dz_i
    depth_sum += dz_i
    
+dz3 = np.zeros(shape)
+for i in range(len(dz)):
+    dz3[i, :, :] = dz[i]
 depth_fracs = find_depthfracs(dz, shape, max_depth)
+V = calc_Aij(data)*dz3
 
 for method in ['BAR', 'PYC']:
     #loading mean APE file
     filename = f'WOCE_Data/APEarrays/WAGHC_APE_{method}-mean.npy'
     mean_APE = np.load(datapath + filename)
-    mean_APE = mean_APE*vol_nans
+    mean_APE = mean_APE*vol_nans/V
     zonalmean = np.nanmean(mean_APE, axis = 2)
     log10zm = np.log10(zonalmean)
     flipped = np.flip(log10zm, axis =0)
     #plotting vertically integrated APE per unit area
-    fig, ax = plt.subplots(figsize = (20, 15))
+    fig, ax = plt.subplots(figsize = (6.3, 3))
     ax.set_facecolor('darkgrey')
     X, Y = np.meshgrid(data.latitude, data.depth)
-    plot = ax.contourf(X, Y, log10zm, levels = 15)
+    log10zm[np.where(log10zm < vmin)] = vmin
+    plot = ax.contourf(X, Y, log10zm, levels = 15, cmap = 'viridis')
     # plt.gca().flip
-    plt.colorbar(plot, label = '$log_{10}$ zonal mean APE density $(Jm^{-3})$', location = 'bottom')
-    ax.set_title(f'WOCE {method} Zonal Mean')
+    plt.colorbar(plot, label = '$log_{10}$ zonal mean APE density $(Jm^{-3})$', location = 'right', extend = 'min')
+    # ax.set_title(f'WOCE {method} Zonal Mean')
     ax.set_ylabel('Depth, m')
     ax.set_xlabel('Latitude, $^\circ$')
     ax.invert_yaxis()
-    plt.savefig(f'WOCE Plots\{method}\WOCE_{method}_zonalmean_log10APE.png', bbox_inches = 'tight')
+    plt.savefig(f'WOCE Plots\{method}\WOCE_{method}_zonalmean_log10APE.pdf', bbox_inches = 'tight')
     # plt.close()
     
     

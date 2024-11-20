@@ -14,7 +14,7 @@ import numpy.ma as ma
 import pickle 
 import pandas as pd
 
-datadir = 'WOCE_Data/Data/'
+datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
 month = '01'
 filename = f'WAGHC_{method}_{month}_UHAM-ICDC_v1_0_1.nc'
@@ -59,39 +59,41 @@ V_ijk *= depth_fracs
 V_ijk *= volume_valid
 
 #open ocean and sea filters
-with open('ocean_filters-WOCE.pkl', 'rb') as f:
+with open('RegionFilters/ocean_filters-WOCE_-45.pkl', 'rb') as f:
     ocean_filters = pickle.load(f)
-with open('sea_filters-WOCE.pkl', 'rb') as f:
-    sea_filters = pickle.load(f)
 
 #creating filters for atlantic,  pacific, indian, and world oceans
 atlantic = -(np.isnan(ocean_filters['North Atlantic Ocean'])-1) -\
-    (np.isnan(ocean_filters['South Atlantic Ocean'])-1)
+    (np.isnan(ocean_filters['South Atlantic Ocean'])-1) -\
+        (np.isnan(ocean_filters['Arctic Ocean'])-1)
     
 pacific = -(np.isnan(ocean_filters['North Pacific Ocean'])-1) -\
     (np.isnan(ocean_filters['South Pacific Ocean'])-1)
     
 indian = -(np.isnan(ocean_filters['Indian Ocean'])-1)
 
-medi = -(np.isnan(sea_filters['Mediterranean Sea - Eastern Basin'])-1) -\
-    (np.isnan(sea_filters['Mediterranean Sea - Western Basin'])-1)
+medi = -(np.isnan(ocean_filters['Mediterranean Region'])-1) 
+southern = -(np.isnan(ocean_filters['Southern Ocean'])-1) 
+
 
 world_oceans = np.zeros(shape[1:])
 for OB in ocean_filters.keys():
-    world_oceans -= (np.isnan(ocean_filters[OB])-1)
-
+    if 'Ocean' in OB:
+        print(OB)
+        world_oceans -= (np.isnan(ocean_filters[OB])-1)
+#%%
 #creating filters for atlantic + medi and world oceans + medi
 atlantic_medi = atlantic + medi
 
 world_oceans_medi = world_oceans + medi
 
-labels = ['Atlantic with Medi', 'Atlantic', 'Pacific', 'Indian', 'World Oceans with Medi', 'World Oceans']
-filters = [atlantic_medi, atlantic, pacific, indian, world_oceans_medi, world_oceans]
+labels = ['Atlantic with Medi', 'Atlantic', 'Pacific', 'Indian', 'World Oceans with Medi', 'World Oceans', 'Southern']
+filters = [atlantic_medi, atlantic, pacific, indian, world_oceans_medi, world_oceans, southern]
 
 #calculating APE density for each filter
 df = pd.DataFrame(columns = ['BAR', 'PYC'], index = labels)
 for method in ['BAR', 'PYC']:
-    filename = f'WOCE_Data/APEarrays/WAGHC_APE_{method}-mean.npy'
+    filename = datapath + f'WOCE_Data/APEarrays/WAGHC_APE_{method}-mean.npy'
     mean_APE = np.load(filename)
     print(f'method: {method}')
     densities = np.zeros(len(filters))
@@ -104,15 +106,15 @@ for method in ['BAR', 'PYC']:
         densities[i] = density
     df[method] = densities
 #saving df with calculated values and Huang values
-df['Huang'] = [708.0, 638.8, 481.7, 472.7, 664.4, 624.2]
-df.to_csv('APE_densities_Huang.csv')
+df['Huang'] = [708.0, 638.8, 481.7, 472.7, 664.4, 624.2, np.nan]
+# df.to_csv('LiteratureComparisons/APE_densities_Huang.csv')
 
 #creating list of months for plotting
 months = np.arange(1,13).astype(str)
 for i in range(len(months)):
     if len(months[i]) == 1:
         months[i] = '0'+months[i]
-
+#%%
 #Plotting APE density against month for different filters
 fig, axs = plt.subplots(3, 2, sharex=True, figsize = (15, 12))
 ax = 0

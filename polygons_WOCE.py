@@ -15,13 +15,13 @@ import pandas as pd
 from shapely.geometry import Polygon, Point
 import matplotlib.pyplot as plt
 import pickle 
-
+from FuncsAPE import datapath
 
 #import files with polygons for oceans/seas
-worldseas = gpd.read_file('World_Seas_IHO_v3\World_Seas_IHO_v3.shp')
+worldseas = gpd.read_file(datapath + 'goas\goas_v01.shp')
 
 #reading in data
-datadir = 'WOCE_Data/Data/'
+datadir = datapath+'WOCE_Data/Data/'
 method = 'BAR'
 month = '01'
 filename = f'WAGHC_{method}_{month}_UHAM-ICDC_v1_0_1.nc'
@@ -32,87 +32,90 @@ lat = data.latitude.to_numpy()
 lon = data.longitude.to_numpy()
 
 #converting lon and lat into the same range
-oor_lon = np.where(lon > 180)[0] #out of range lon
+oor_lon = np.where(lon > 180)[0]
 lon[oor_lon] = lon[oor_lon] - 360
 
-#saving 2D shape of the data
 shape_2d = data.temperature.to_numpy()[0, 0, :, :].shape
 
-#creating arrays with lon and lat at each grid points
+#meshgrid of lon lat
 LON, LAT = np.meshgrid(lon, lat)
-#creating arrays with lon and lat indexes at each grid points
 lon_I, lat_J = np.meshgrid(np.arange(len(lon)), np.arange(len(lat)))
 
-#creating a dictionary with all the data
+#creating dataframe of grid points
 values = {'lon': LON.flatten(), 'lat': LAT.flatten(), 'lon_i': lon_I.flatten(),
           'lat_j': lat_J.flatten()}
-
-#creating a dataframe
 df = pd.DataFrame(values)
-
-#making a dataframe of each grid point as a Point
 df['coords'] = list(zip(df['lon'],df['lat']))
 df['coords'] = df['coords'].apply(Point)
 points = gpd.GeoDataFrame(df, geometry='coords', crs = 'epsg:4326')
 
-#creating a list of all the ocean basin names
+SO_cutoff_lat = -45
+
 oceans = ['North Atlantic Ocean', 'South Atlantic Ocean',
           'North Pacific Ocean', 'South Pacific Ocean',
-          'Indian Ocean', 'Southern Ocean', 'Arctic Ocean']
+          'Indian Ocean', 'Southern Ocean', 'Arctic Ocean',
+          'Mediterranean Region', 'Baltic Sea',
+          'South China and Easter Archipelagic Seas']
 
-#acronym
-# acros = oceans.copy()
-# def acronym(string):
-#     words = string.split()
-#     j = ''
-#     for w in words:
-#         j += w[0]
-#     return j
 
-#creating a dataframe with all the oceans
-oceans_df = worldseas[worldseas['NAME'].isin(oceans)]
-#finding the ocean basin that each point is in
+acros = oceans.copy()
+#creating ocean dataframe
+# oceans_df = worldseas[worldseas['NAME'].isin(oceans)]
+oceans_df = worldseas[worldseas['name'].isin(oceans)]
+
+#finding points in ocean polygons
 pointInPolys= gpd.tools.sjoin(points, oceans_df, predicate="within", how='left')
 
-colors = ['Reds_r', 'Oranges_r', 'plasma_r', 'Greens_r', 'Blues_r', 'Purples_r', 'Greys_r']
-c = 0
-#creating ocean filters for each ocean
+#creating filters for different ocean basins
+#colors for plotting
+colors = ['Reds_r', 'Oranges_r', 'plasma_r', 'Greens_r', 'Blues_r', 'Purples_r', 'Greys_r', 'summer', 'spring', 'autumn'] 
+c = 0 #color index for plotting
 ocean_dict = {}
+plotting = np.zeros(shape_2d)
+plt.figure()
 for name in oceans:
     LonLatBool = np.zeros(shape_2d)
-    ocean_points = pointInPolys[pointInPolys.NAME == name]
+    # ocean_points = pointInPolys[pointInPolys.NAME == name]
+    ocean_points = pointInPolys[pointInPolys.name == name]
     for pt in ocean_points.index:
         i = ocean_points.lon_i
         j = ocean_points.lat_j
         LonLatBool[j, i] = 1
-        LonLatBool[LonLatBool == 0] = np.nan
+    if name == 'Southern Ocean':
+        LonLatBool[np.where(LAT<SO_cutoff_lat)] = 1
+    else:
+        LonLatBool[np.where(LAT<SO_cutoff_lat)] = 0
+    if name == 'Indian Ocean':
+        print(colors[c])
+        sum_bool = (LAT >= 13).astype(int) + (LON < 44).astype(int)
+        LonLatBool[np.where(sum_bool >1)] = 0
+   
+    plotting += LonLatBool*(c+1)
+    LonLatBool[LonLatBool == 0] = np.nan
     for j in range(len(lat)):
         if (LonLatBool[j, 179+1] == 1) and (LonLatBool[j, 179-1]==1):
             LonLatBool[j, 179] = 1
-    #saving ocean filters in dictionary
+        if (LonLatBool[j, 0] == 1) and (LonLatBool[j, -2]==1):
+            LonLatBool[j, -1] = 1
     ocean_dict[name] = LonLatBool.copy()
-    plt.imshow(LonLatBool, cmap = colors[c])
-    c += 1
+    
+    # plotting to check that its correct
+    plt.imshow(np.flip(LonLatBool,  axis = 0), cmap = colors[c])#,
+                # extent = extent)
+    
+    c += 1 #updating color index for plotting
+pacific = np.nan_to_num(ocean_dict['South Pacific Ocean']) +\
+    np.nan_to_num(ocean_dict['North Pacific Ocean'])
+eq_pacific = np.zeros(pacific.shape)
+eq_pacific[np.where(np.abs(LAT) <= 20)] = 1
 
-#saving dictionary as file
-with open('RegionFilters/ocean_filters-WOCE.pkl', 'wb') as f:
+eq_pacific = pacific * eq_pacific
+eq_pacific[eq_pacific == 0] = np.nan
+plt.imshow(np.flip(eq_pacific,  axis = 0), cmap = 'cividis')#,
+            # extent = extent)
+ocean_dict['Equatorial Pacific'] = eq_pacific
+#saving filters as a dictionary
+with open(f'RegionFilters/ocean_filters-WOCE_{SO_cutoff_lat}.pkl', 'wb') as f:
     pickle.dump(ocean_dict, f)
-
-#repeating for seas of interest
-seas = ['Mediterranean Sea - Eastern Basin', 'Mediterranean Sea - Western Basin', 'Red Sea']
-seas_df = worldseas[worldseas['NAME'].isin(seas)]
-pointInPolys_sea= gpd.tools.sjoin(points, seas_df, predicate="within", how='left')
-
-seas_dict = {}
-for name in seas:
-    LonLatBool = np.zeros(shape_2d)
-    sea_points = pointInPolys[pointInPolys_sea.NAME == name]
-    for pt in sea_points.index:
-        i = sea_points.lon_i
-        j = sea_points.lat_j
-        LonLatBool[j, i] = 1
-        LonLatBool[LonLatBool == 0] = np.nan
-    seas_dict[name] = LonLatBool.copy()
-
-with open('RegionFilters/sea_filters-WOCE.pkl', 'wb') as f:
-    pickle.dump(seas_dict, f)
+# plt.contour(lon, lat, plotting)
+# 

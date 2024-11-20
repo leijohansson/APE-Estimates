@@ -20,9 +20,9 @@ datadir = datapath + 'Data'
 #data file has all monthly files inside (no subfolders)
 #nothing else in the data file
 
-filename = 'EN.4.2.2.f.analysis.g10.195001.nc'
+filename = 'EN.4.2.2.f.analysis.g10.196001.nc'
 data = xr.open_dataset(f'{datadir}/{filename}')
-start_year = 2023
+start_year = 1960
 end_year = 2023
 
 shape = data.salinity.squeeze().shape

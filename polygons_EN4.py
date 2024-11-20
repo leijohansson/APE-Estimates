@@ -22,6 +22,7 @@ def acronym(string):
         j += w[0]
     return j
 
+SO_cutoff_lat = -45
 
 oceans = ['North Atlantic Ocean', 'South Atlantic Ocean',
           'North Pacific Ocean', 'South Pacific Ocean',
@@ -86,9 +87,9 @@ if __name__ == '__main__':
             j = ocean_points.lat_j
             LonLatBool[j, i] = 1
         if name == 'Southern Ocean':
-            LonLatBool[np.where(LAT<-45)] = 1
+            LonLatBool[np.where(LAT<SO_cutoff_lat)] = 1
         else:
-            LonLatBool[np.where(LAT<-45)] = 0
+            LonLatBool[np.where(LAT<SO_cutoff_lat)] = 0
         if name == 'Indian Ocean':
             print(colors[c])
             sum_bool = (LAT >= 13).astype(int) + (LON < 44).astype(int)
@@ -108,8 +109,18 @@ if __name__ == '__main__':
                     extent = extent)
         
         c += 1 #updating color index for plotting
+    pacific = np.nan_to_num(ocean_dict['South Pacific Ocean']) +\
+        np.nan_to_num(ocean_dict['North Pacific Ocean'])
+    eq_pacific = np.zeros(pacific.shape)
+    eq_pacific[np.where(np.abs(LAT) <= 20)] = 1
+    
+    eq_pacific = pacific * eq_pacific
+    eq_pacific[eq_pacific == 0] = np.nan
+    plt.imshow(np.flip(eq_pacific,  axis = 0), cmap = 'cividis',
+                extent = extent)
+    ocean_dict['Equatorial Pacific'] = eq_pacific
     #saving filters as a dictionary
-    with open('RegionFilters/ocean_filters-EN4.pkl', 'wb') as f:
+    with open(f'RegionFilters/ocean_filters-EN4_{SO_cutoff_lat}.pkl', 'wb') as f:
         pickle.dump(ocean_dict, f)
     # plt.contour(lon, lat, plotting)
 # 

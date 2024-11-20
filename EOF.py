@@ -15,7 +15,7 @@ import pandas as pd
 from eofs.standard import Eof
 import cartopy.crs as ccrs
 import pickle
-from FuncsAPE import crop_oceanbasin, datapath
+from FuncsAPE import crop_oceanbasin, datapath, calc_Aij
 
 def make_EOFsolver(data, mask = None):
     mask3d = np.broadcast_to(mask, data.shape)    
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     shape = data.salinity.squeeze().shape
     mask = np.nan_to_num(surface_valid-1, nan = 1)
     
+    area = calc_Aij(data)
     #setting up array for EOF (time, lat, lon)
     timespace_arr = np.zeros((nmonths, len(data.lat), len(data.lon)))
     
@@ -56,9 +57,9 @@ if __name__ == '__main__':
                 month = '0'+str(month)
     
             file = f'{datapath}APEarrays\APE_{year}-{month}.npy'
-            APE_all = np.load(file)
+            APE_all = np.load(file)/area
             #calculating APE up to depth 700
-            APE_700 = np.sum(APE_all[:24, :, :], axis = 0)
+            APE_700 = np.sum(APE_all, axis = 0)
             mAPE = ma.masked_array(APE_700, mask = mask)
             timespace_arr[timeidx, :, :] = mAPE
     #%%
@@ -78,7 +79,7 @@ if __name__ == '__main__':
         fracs = solver.varianceFraction(neofs)
     
         basin, lonb, latb = crop_oceanbasin(eof1[0, :, :], lon, lat)
-        plot = axs[f_i//2, f_i%2].imshow(basin, #levels=clevs,
+        plot = axs[f_i//2, f_i%2].imshow(np.flip(basin, axis =0), #levels=clevs,
                     cmap=plt.cm.RdBu_r)
         fig.colorbar(plot, ax = axs[f_i//2, f_i%2], shrink=0.6)
         axs[f_i//2, f_i%2].set_title(f'{OB} EOF1: {round(fracs[0], 4)*100}%')

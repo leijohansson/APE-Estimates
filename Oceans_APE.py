@@ -26,10 +26,23 @@ sns.set_theme(context='paper', style='white', palette=palette,
 max_depth = np.inf
 
 #loading filters
-with open('RegionFilters/ocean_filters-EN4.pkl', 'rb') as f:
+with open('RegionFilters/ocean_filters-EN4_-45.pkl', 'rb') as f:
     ocean_filters = pickle.load(f)
 dictkey = list(ocean_filters.keys())[0]
 ocean_filters['World'] = np.ones(ocean_filters[dictkey].shape)
+
+#loading filters
+with open(f'RegionFilters/ocean_filters-EN4_-30.pkl', 'rb') as f:
+    ocean_filters30 = pickle.load(f)
+ocean_filters['IO30'] = ocean_filters30['Indian Ocean']
+
+with open(f'RegionFilters/ocean_filters-EN4_-45.pkl', 'rb') as f:
+    IO45 = np.nan_to_num(pickle.load(f)['Indian Ocean'])
+with open(f'RegionFilters/ocean_filters-EN4_-30.pkl', 'rb') as f:
+    IO30 = np.nan_to_num(pickle.load(f)['Indian Ocean'])
+    
+ocean_filters['IOBand'] = IO45-IO30
+
 
 #set time range
 startyear = 1960
@@ -86,13 +99,13 @@ fig, axs = plt.subplots(4, 3, figsize=(12, 15))
 f_i = 0
 for OB in TS_oceans.keys():
     #plotting data
-    axs[f_i//3, f_i%3].plot(x_time, TS_oceans[OB], alpha = 0.6, label = 'Data')
+    axs[f_i//3, f_i%3].plot(x_time, TS_oceans[OB], alpha = 0.6, label = 'Data', color = 'royalblue')
     #plotting rolling mean
     axs[f_i//3, f_i%3].plot(x_time, rolling.mean()[OB], color = 'black', label = f'{rolling_n} month rolling mean')
     axs[f_i//3, f_i%3].set_title(OB)
     axs[f_i//3, f_i%3].set_ylabel('Volume Integrated APE, $J$')
     f_i += 1
-    
+    axs[f_i//3, f_i%3].spines[['right', 'top']].set_visible(False)
 
 axs[3, 0].set_xlabel('Time')
 axs[3, 1].set_xlabel('Time')
@@ -108,8 +121,8 @@ axs[-1, -1].legend(fontsize = 12, loc = 'upper left')
 
 #%%
 def plot_one(OB, ax):
-    ax.set_title(OB)
-    ax.plot(x_time, TS_oceans[OB], alpha = 0.6, label = 'Data')
+    # ax.set_title(OB)
+    ax.plot(x_time, TS_oceans[OB], alpha = 0.6, label = 'Data', color = 'royalblue')
     #plotting rolling mean
     ax.plot(x_time, rolling.mean()[OB], color = 'black', label = f'{rolling_n} month rolling mean')
     ax.set_xlabel('Time')
@@ -125,77 +138,121 @@ def lin_regress_subsetyears(OB, startyear = 0, endyear = np.inf, ax = None, alte
     print(f'OB {startyear}-{endyear}, Trend : {slope/1e17} +/- {std_err/1e17} x 10^17 J/year,')
     print(f'R2 value: {r}, p_value: {p}')
     if ax: 
-        ax.plot(x_time[time_sel], slope*(np.arange(len(x_time))/12)[time_sel] + intercept, lw = '2', color = 'red', label = 'Trend Line')
+        ax.plot(x_time[time_sel], slope*(np.arange(len(x_time))/12)[time_sel] + intercept, lw = '2', color = 'red', label = 'Trend')
 
 #%%
-#pacific
-fig, axs = plt.subplots(2,  1, sharex = True)
-plot_one('North Pacific Ocean', axs[0])
-plot_one('South Pacific Ocean', axs[1])
+fig, ax = plt.subplots(1,  1, figsize = (3.5, 3))#, sharex = True)
+plot_one('North Pacific Ocean', ax)    
+ax.spines[['right', 'top']].set_visible(False)
+
+ax.legend(loc = 'upper right')
 fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/NPO_TS.pdf')
 
+fig, ax = plt.subplots(1,  1, figsize = (3.5, 3))#, sharex = True)
+plot_one('South Pacific Ocean', ax)
+lin_regress_subsetyears('South Pacific Ocean', 1990, 2015, ax)
+lin_regress_subsetyears('South Pacific Ocean')
 
-lin_regress_subsetyears('South Pacific Ocean', 1990, 2015, axs[1])
-lin_regress_subsetyears('North Pacific Ocean', ax = axs[0])
+ax.spines[['right', 'top']].set_visible(False)
 
-axs[0].legend(loc = 'upper right')
-plt.savefig('EN4 Plots/Pacific_TS.pdf')
+ax.legend(loc = 'upper left')
+fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/SPO_TS.pdf')
 
 
 
 #%%
-fig, axs = plt.subplots(2,  1, sharex = True)
-plot_one('North Atlantic Ocean', axs[0])
-plot_one('South Atlantic Ocean', axs[1])
+fig, ax = plt.subplots(1,  1, figsize = (3.5, 3))#, sharex = True)
+plot_one('North Atlantic Ocean', ax)
+ax.spines[['right', 'top']].set_visible(False)
+
+# ax.legend(loc = 'upper right')
 fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/NAO_TS.pdf')
+lin_regress_subsetyears('North Atlantic Ocean')
 
-lin_regress_subsetyears('North Atlantic Ocean', ax = axs[0])
-lin_regress_subsetyears('South Atlantic Ocean', ax = axs[1])
+fig, ax = plt.subplots(1,  1, figsize = (3.5, 3))#, sharex = True)
+plot_one('South Atlantic Ocean', ax)
+ax.spines[['right', 'top']].set_visible(False)
 
+ax.legend(loc = 'upper right')
+fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/SAO_TS.pdf')
+lin_regress_subsetyears('South Atlantic Ocean')
 
-axs[0].legend(loc = 'upper right')
-plt.savefig('EN4 Plots/Atlantic_TS.pdf')
 
 #%%
-fig, axs = plt.subplots(2,  1, sharex = True)
-plot_one('Arctic Ocean', axs[0])
-plot_one('Southern Ocean', axs[1])
+fig, ax = plt.subplots(1,  1, figsize = (6, 3))#, sharex = True)
+plot_one('Southern Ocean', ax)
+ax.spines[['right', 'top']].set_visible(False)
+print('Peak at:', x_time[np.where(rolling.mean()['Southern Ocean'] == rolling.mean()['Southern Ocean'].min())][0])
+x_dip = pd.date_range('2006-06-01', periods=1, freq='m')
+ax.axvline(x_dip, label = '2006-06', linestyle = '--', color = 'red', zorder = -1)
+ax.legend(loc = 'lower left')
 fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/Southern_TS.pdf')
 
-lin_regress_subsetyears('Arctic Ocean', ax = axs[0])
-lin_regress_subsetyears('Southern Ocean', ax = axs[1])
-axs[0].legend(loc = 'lower left')
-
-plt.savefig('EN4 Plots/Poles_TS.pdf')
+print('SO')
+#%%
+fig, ax = plt.subplots(1,  1, figsize = (6, 3))#, sharex = True)
+plot_one('Arctic Ocean', ax)
+ax.spines[['right', 'top']].set_visible(False)
+# lin_regress_subsetyears('Arctic Ocean', ax = ax)
 
 
 print('Peak at:', x_time[np.where(TS_oceans['Arctic Ocean'] == TS_oceans['Arctic Ocean'].max())][0])
-x_warm = pd.date_range('2016-01-30', periods=1, freq='m')
+x_warm = pd.date_range('2016-09-01', periods=1, freq='m')
+ax.axvline(x_warm, label = '2016-09', linestyle = '--', color = 'red', zorder = -1)
 
-print('Arctic warming ', x_warm)
-axs[0].vlines(x_warm, 2.7e20, 3e20)
+print('Dip at:', x_time[np.where(TS_oceans['Arctic Ocean'][:int(0.7*len(x_time))] == TS_oceans['Arctic Ocean'][:int(0.7*len(x_time))].min())][0])
+x_dip = pd.date_range('1990-10-01', periods=1, freq='m')
+ax.axvline(x_dip, label = '1990-10', linestyle = '-.', color = 'blue', zorder = -1)
 
-print('SO')
-print('Peak at:', x_time[np.where(rolling.mean()['Southern Ocean'] == rolling.mean()['Southern Ocean'].min())][0])
+ax.legend(loc = 'lower left')
+
+
+fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/Arctic_TS.pdf')
+
 
 #coincides with arctic warming. 
 #%%
-fig, ax = plt.subplots(1,  1, sharex = True, figsize = (6.4, 3))
+fig, ax = plt.subplots(1,  1, figsize = (6, 3))#, sharex = True)
 plot_one('Indian Ocean', ax)
-lin_regress_subsetyears('Indian Ocean', 1960, 2000, ax)
 ax.legend(loc = 'upper left')
-lin_regress_subsetyears('Indian Ocean', 2003, np.inf, ax)
+ax.spines[['right', 'top']].set_visible(False)
 
 fig.tight_layout()
-plt.savefig('EN4 Plots/Indian_TS.pdf')
+plt.savefig('EN4 Plots/TS Plots/Indian_TS.pdf')
     
 #%%
-fig, ax = plt.subplots(1,  1, sharex = True, figsize = (6.4, 3))
+fig, ax = plt.subplots(1,  1, figsize = (7, 3))#, sharex = True)
 plot_one('World', ax)
 fig.tight_layout()
 lin_regress_subsetyears('World', ax = ax)
 ax.legend(loc = 'lower left')
-plt.savefig('EN4 Plots/World_TS.pdf')
+ax.spines[['right', 'top']].set_visible(False)
+
+plt.savefig('EN4 Plots/TS Plots/World_TS.pdf')
+
+#%%
+fig, ax = plt.subplots(1,  1, figsize = (3.5, 3))#, sharex = True)
+plot_one('IO30', ax)    
+ax.spines[['right', 'top']].set_visible(False)
+
+# ax.legend(loc = 'upper right')
+fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/IO30_TS.pdf')
+
+fig, ax = plt.subplots(1,  1, figsize = (3.5, 3))#, sharex = True)
+plot_one('IOBand', ax)
+ax.spines[['right', 'top']].set_visible(False)
+
+ax.legend(loc = 'upper left')
+fig.tight_layout()
+plt.savefig('EN4 Plots/TS Plots/IOBand_TS.pdf')
+
 
 #%%
 from scipy.signal import welch

@@ -104,6 +104,7 @@ def calc_APE(datadir, filename, V_ijk, p, z, routine = 'exact', nonegs = True):
     APE_dV= np.nan_to_num(APE_dV)
     if nonegs:
         APE_dV[APE_dV < 0] = 1
+        
     # print(time.time()-start)
     
     return BGE, APE_dV, Pi2
@@ -221,7 +222,10 @@ def crop_oceanbasin(data, lon, lat):
 
     '''
     #sum each row to find top and bottom
-    data = data.filled(np.nan)
+    try:
+        data = data.filled(np.nan)
+    except:
+        pass
     rows = np.nansum(data, axis = 1)
     rows_i = np.where(rows!=0)[0]
     mini, maxi = np.min(rows_i), np.max(rows_i)
