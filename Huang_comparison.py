@@ -3,17 +3,19 @@
 Created on Fri May 24 17:57:03 2024
 
 @author: Linne
+
+Comparison of APE values to those published by Huang 2005
 """
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 from FuncsAPE import *
-#grid spacing 0.25 deg
 import scipy.io
 import numpy.ma as ma
 import pickle 
 import pandas as pd
 
+#grid spacing 0.25 deg
 datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
 month = '01'
@@ -116,13 +118,13 @@ for i in range(len(months)):
         months[i] = '0'+months[i]
 #%%
 #Plotting APE density against month for different filters
-fig, axs = plt.subplots(3, 2, sharex=True, figsize = (15, 12))
+fig, axs = plt.subplots(4, 2, sharex=True, figsize = (15, 12))
 ax = 0
 for method in ['BAR', 'PYC']:
     print(f'method: {method}')
     df = pd.DataFrame(columns = months, index = labels)
     for month in months:
-        filename = f'WOCE_Data/APEarrays/WAGHC_APE_{method}-{month}.npy'
+        filename = datapath + f'WOCE_Data/APEarrays/WAGHC_APE_{method}-{month}.npy'
         mean_APE = np.load(filename)
         densities = np.zeros(len(filters))
         for i in range(len(filters)):
@@ -139,9 +141,9 @@ for method in ['BAR', 'PYC']:
         axs[i//2, i%2].set_title(df.index[i])
         axs[i//2, i%2].set_ylabel('APE density, $Jm^{-3}$')
 
-axs[2, 0].set_xlabel('Month')
-axs[2, 1].set_xlabel('Month')
+axs[3, 0].set_xlabel('Month')
+axs[3, 1].set_xlabel('Month')
 
-plt.legend()
-fig.savefig('Density_Climatology_WOCE.png', bbox_inches = 'tight')
-plt.close()
+axs[0, 1].legend()
+fig.savefig('WOCE Plots/Density_Climatology_WOCE_huang.png', bbox_inches = 'tight')
+# plt.close()

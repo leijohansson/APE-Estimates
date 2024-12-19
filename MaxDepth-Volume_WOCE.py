@@ -3,6 +3,8 @@
 Created on Tue May 28 15:47:58 2024
 
 @author: Linne
+
+Plot of deepest depth at each lat lon point for the WOCE dataset
 """
 
 import xarray as xr
@@ -17,7 +19,7 @@ import pandas as pd
 
 max_depth = np.inf
 
-datadir = 'WOCE_Data/Data/'
+datadir = datapath + 'WOCE_Data/Data/'
 method = 'BAR'
 month = '01'
 filename = f'WAGHC_{method}_{month}_UHAM-ICDC_v1_0_1.nc'

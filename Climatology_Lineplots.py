@@ -139,6 +139,7 @@ fig.savefig('WOCE Plots/Ocean_Climatologies.pdf', bbox_inches = 'tight')
 #%%
 if 'World' not in oceans:
     oceans.append('World')
+#finding variation in APE values within the year
 for OB in oceans:
     BAR = methods_dict['BAR'][OB]
     PYC = methods_dict['PYC'][OB]
@@ -164,9 +165,7 @@ for OB in oceans:
     
     perc = np.round(meandiff/PYCmean*100, 3)
     
-    
-    
-    # print(f'{OB} & {PYCval}'+ r' $\times 10^' + f'{PYCorder}$ & ${BARval}' + r' \times 10^'+ f'{BARorder}$ & ${diffval}'+r' \times 10^ '+f'{difforder}$& {perc}'+r' \\ ')
+        
     print(OB, PYC.max() - PYC.min())
     
     

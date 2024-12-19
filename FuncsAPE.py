@@ -16,6 +16,7 @@ from gsw_gammat_analytic_CT import *
 
 datapath = r'C:\\Users\\Linne\\Documents\\Github\\APE Data\\'
 
+#defining coefficients for calculation of reference rho and p
 a = 4.56016575
 b = -1.24898501
 c = 0.00439778209
@@ -265,6 +266,31 @@ def crop_oceanbasin(data, lon, lat):
     return cdata, lon, lat
 
 def rearrange_OB(data, lon, lat):
+    '''
+    Rearrange ocean basin points such that the ocean basin is continuous 
+    Eg. if the Pacific Ocean is at the extreme left and right of the 
+    array, rearrange them such that the Pacific Ocean is one block.
+
+    Parameters
+    ----------
+    data : 2D array
+        2D array in which the points in the relevant ocean basin have values
+        but other points are nan or 0.
+    lon : 1d array
+        Array with longitude values corresponding to the data array above.
+    lat : 1d array
+        Array with latitude values corresponding to the data array above.
+
+    Returns
+    -------
+    data : 2D array
+        above data array arranged such that the ocean is not separated.
+    lon : 1d array
+        lon array above rearranged to correspond to the new data array.
+    lat : 1d array
+        same as array inputted .
+
+    '''
     print(data.shape)
     data = data.filled(np.nan)
     #find all columns with data
@@ -282,7 +308,6 @@ def rearrange_OB(data, lon, lat):
         left = data[:, :zero_i[0]]
         data = np.concatenate((right, left), axis = 1)
         lon = np.concatenate((lon[zero_i[0]:], lon[:zero_i[0]]))
-        # lat = np.concatenate((lon[:, zero_i[0]:], lon[:, :zero_i[0]]), axis = 1)
 
         print(data.shape)
     return data, lon, lat
@@ -291,7 +316,7 @@ def rearrange_OB(data, lon, lat):
 
 def calc_APE_WOA(datadir, V_ijk, p, z):
     '''
-
+    Function to calculate APE for WOA dataset.
     Parameters
     ----------
     datadir : str
